@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Sudoku</title>
+  <title>Mctrot</title>
   <style>body { padding: 0; margin: 3em; }</style>
 </head>
 
@@ -5264,13 +5264,9 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$element = _Browser_element;
-var $author$project$Sudoku$GotLewisSeed = function (a) {
-	return {$: 'GotLewisSeed', a: a};
-};
-var $author$project$Sudoku$GotSeed = function (a) {
+var $author$project$Mctrot$GotSeed = function (a) {
 	return {$: 'GotSeed', a: a};
 };
-var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$random$Random$Generate = function (a) {
 	return {$: 'Generate', a: a};
 };
@@ -5455,23 +5451,778 @@ var $elm$random$Random$independentSeed = $elm$random$Random$Generator(
 			A4($elm$random$Random$map3, makeIndependentSeed, gen, gen, gen),
 			seed0);
 	});
-var $author$project$Sudoku$init = function (_v0) {
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$core$Basics$modBy = _Basics_modBy;
+var $author$project$Mctrot$parseDate = function (isoDate) {
+	var _v0 = A2(
+		$elm$core$List$map,
+		$elm$core$String$toInt,
+		A2($elm$core$String$split, '-', isoDate));
+	if ((((((_v0.b && (_v0.a.$ === 'Just')) && _v0.b.b) && (_v0.b.a.$ === 'Just')) && _v0.b.b.b) && (_v0.b.b.a.$ === 'Just')) && (!_v0.b.b.b.b)) {
+		var year = _v0.a.a;
+		var _v1 = _v0.b;
+		var month = _v1.a.a;
+		var _v2 = _v1.b;
+		var day = _v2.a.a;
+		return $elm$core$Maybe$Just(
+			_Utils_Tuple3(year, month, day));
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$List$drop = F2(
+	function (n, list) {
+		drop:
+		while (true) {
+			if (n <= 0) {
+				return list;
+			} else {
+				if (!list.b) {
+					return list;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs;
+					n = $temp$n;
+					list = $temp$list;
+					continue drop;
+				}
+			}
+		}
+	});
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm_community$list_extra$List$Extra$getAt = F2(
+	function (idx, xs) {
+		return (idx < 0) ? $elm$core$Maybe$Nothing : $elm$core$List$head(
+			A2($elm$core$List$drop, idx, xs));
+	});
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Mctrot$sakamotoWeekday = F3(
+	function (year, month, day) {
+		var y = (month < 3) ? (year - 1) : year;
+		var offsets = _List_fromArray(
+			[0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4]);
+		var offset = A2(
+			$elm$core$Maybe$withDefault,
+			0,
+			A2($elm_community$list_extra$List$Extra$getAt, month - 1, offsets));
+		return A2($elm$core$Basics$modBy, 7, ((((y + ((y / 4) | 0)) - ((y / 100) | 0)) + ((y / 400) | 0)) + offset) + day);
+	});
+var $author$project$Mctrot$mondayIndexedWeekday = function (isoDate) {
+	return A2(
+		$elm$core$Maybe$withDefault,
+		0,
+		A2(
+			$elm$core$Maybe$map,
+			function (_v0) {
+				var year = _v0.a;
+				var month = _v0.b;
+				var day = _v0.c;
+				return A2(
+					$elm$core$Basics$modBy,
+					7,
+					A3($author$project$Mctrot$sakamotoWeekday, year, month, day) + 6);
+			},
+			$author$project$Mctrot$parseDate(isoDate)));
+};
+var $author$project$Mctrot$parseStartMinutes = function (timeOfDay) {
+	var _v0 = A2(
+		$elm$core$List$map,
+		$elm$core$String$toInt,
+		A2($elm$core$String$split, ':', timeOfDay));
+	if ((((_v0.b && (_v0.a.$ === 'Just')) && _v0.b.b) && (_v0.b.a.$ === 'Just')) && (!_v0.b.b.b)) {
+		var hh = _v0.a.a;
+		var _v1 = _v0.b;
+		var mm = _v1.a.a;
+		return (hh * 60) + mm;
+	} else {
+		return 6 * 60;
+	}
+};
+var $author$project$Mctrot$init = function (_v0) {
 	return _Utils_Tuple2(
-		{deterministicSolution: $elm$core$Maybe$Nothing, lewis: $elm$core$Maybe$Nothing, lewisRunning: false, running: false, saState: $elm$core$Maybe$Nothing, stepsPerFrame: 25},
-		$elm$core$Platform$Cmd$batch(
+		{
+			activeStart: {
+				minutes: $author$project$Mctrot$parseStartMinutes('06:00'),
+				weekday: $author$project$Mctrot$mondayIndexedWeekday('2025-01-06')
+			},
+			running: false,
+			saState: $elm$core$Maybe$Nothing,
+			startDate: '2025-01-06',
+			startTimeOfDay: '06:00',
+			started: false,
+			stepsPerFrame: 30
+		},
+		A2($elm$random$Random$generate, $author$project$Mctrot$GotSeed, $elm$random$Random$independentSeed));
+};
+var $author$project$Mctrot$Tick = {$: 'Tick'};
+var $elm$core$Basics$composeL = F3(
+	function (g, f, x) {
+		return g(
+			f(x));
+	});
+var $elm$core$Basics$pow = _Basics_pow;
+var $author$project$SimulatedAnnealing$Schedule$exponential = F2(
+	function (_v0, iteration) {
+		var alpha = _v0.alpha;
+		var initial = _v0.initial;
+		return initial * A2($elm$core$Basics$pow, alpha, iteration);
+	});
+var $elm_community$list_extra$List$Extra$last = function (items) {
+	last:
+	while (true) {
+		if (!items.b) {
+			return $elm$core$Maybe$Nothing;
+		} else {
+			if (!items.b.b) {
+				var x = items.a;
+				return $elm$core$Maybe$Just(x);
+			} else {
+				var rest = items.b;
+				var $temp$items = rest;
+				items = $temp$items;
+				continue last;
+			}
+		}
+	}
+};
+var $author$project$Mctrot$City = F3(
+	function (name, openWindows, closedWindows) {
+		return {closedWindows: closedWindows, name: name, openWindows: openWindows};
+	});
+var $elm$core$Array$fromListHelp = F3(
+	function (list, nodeList, nodeListSize) {
+		fromListHelp:
+		while (true) {
+			var _v0 = A2($elm$core$Elm$JsArray$initializeFromList, $elm$core$Array$branchFactor, list);
+			var jsArray = _v0.a;
+			var remainingItems = _v0.b;
+			if (_Utils_cmp(
+				$elm$core$Elm$JsArray$length(jsArray),
+				$elm$core$Array$branchFactor) < 0) {
+				return A2(
+					$elm$core$Array$builderToArray,
+					true,
+					{nodeList: nodeList, nodeListSize: nodeListSize, tail: jsArray});
+			} else {
+				var $temp$list = remainingItems,
+					$temp$nodeList = A2(
+					$elm$core$List$cons,
+					$elm$core$Array$Leaf(jsArray),
+					nodeList),
+					$temp$nodeListSize = nodeListSize + 1;
+				list = $temp$list;
+				nodeList = $temp$nodeList;
+				nodeListSize = $temp$nodeListSize;
+				continue fromListHelp;
+			}
+		}
+	});
+var $elm$core$Array$fromList = function (list) {
+	if (!list.b) {
+		return $elm$core$Array$empty;
+	} else {
+		return A3($elm$core$Array$fromListHelp, list, _List_Nil, 0);
+	}
+};
+var $author$project$Mctrot$cities = $elm$core$Array$fromList(
+	_List_fromArray(
+		[
+			A3(
+			$author$project$Mctrot$City,
+			'DRIVETHRU',
 			_List_fromArray(
 				[
-					A2($elm$random$Random$generate, $author$project$Sudoku$GotSeed, $elm$random$Random$independentSeed),
-					A2($elm$random$Random$generate, $author$project$Sudoku$GotLewisSeed, $elm$random$Random$independentSeed)
-				])));
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'ACP',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'RIVERVIEW',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'BRACES',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'COLUMBIA',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'RAMP',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'BIGMAC',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'SHIP',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'TITANIC',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'103',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'CHAMFER',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'OG',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'METROPOLITAN',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'CLOCK',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'STRADDLER',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'72ND',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'SLOPER',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'CORNELL',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'STIJL',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(360, 1440),
+					_Utils_Tuple2(1800, 2880),
+					_Utils_Tuple2(3240, 8640),
+					_Utils_Tuple2(9000, 10080)
+				]),
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 360),
+					_Utils_Tuple2(1440, 1800),
+					_Utils_Tuple2(2880, 3240),
+					_Utils_Tuple2(8640, 9000)
+				])),
+			A3(
+			$author$project$Mctrot$City,
+			'PUNCH',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'CHURCH',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(360, 1440),
+					_Utils_Tuple2(1800, 2880),
+					_Utils_Tuple2(3240, 4320),
+					_Utils_Tuple2(4680, 8640),
+					_Utils_Tuple2(9000, 10080)
+				]),
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 360),
+					_Utils_Tuple2(1440, 1800),
+					_Utils_Tuple2(2880, 3240),
+					_Utils_Tuple2(4320, 4680),
+					_Utils_Tuple2(8640, 9000)
+				])),
+			A3(
+			$author$project$Mctrot$City,
+			'SHORTY',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'CONNOLY\u0027S',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(360, 1380),
+					_Utils_Tuple2(1800, 2820),
+					_Utils_Tuple2(3240, 4260),
+					_Utils_Tuple2(4680, 5700),
+					_Utils_Tuple2(6120, 7140),
+					_Utils_Tuple2(7560, 8580),
+					_Utils_Tuple2(9000, 10020)
+				]),
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 360),
+					_Utils_Tuple2(1380, 1800),
+					_Utils_Tuple2(2820, 3240),
+					_Utils_Tuple2(4260, 4680),
+					_Utils_Tuple2(5700, 6120),
+					_Utils_Tuple2(7140, 7560),
+					_Utils_Tuple2(8580, 9000),
+					_Utils_Tuple2(10020, 10080)
+				])),
+			A3(
+			$author$project$Mctrot$City,
+			'WHORL',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'SHOWCASE',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'GIRAFFE',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'PIANO FACTORY',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'7TH',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(360, 1440),
+					_Utils_Tuple2(1800, 2880),
+					_Utils_Tuple2(3240, 4320),
+					_Utils_Tuple2(4680, 8640),
+					_Utils_Tuple2(9000, 10080)
+				]),
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 360),
+					_Utils_Tuple2(1440, 1800),
+					_Utils_Tuple2(2880, 3240),
+					_Utils_Tuple2(4320, 4680),
+					_Utils_Tuple2(8640, 9000)
+				])),
+			A3(
+			$author$project$Mctrot$City,
+			'B&H',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'MACY',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'PENN',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'SHORTY II',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(240, 1440),
+					_Utils_Tuple2(1830, 2880),
+					_Utils_Tuple2(3270, 8640),
+					_Utils_Tuple2(8880, 10080)
+				]),
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 240),
+					_Utils_Tuple2(1440, 1830),
+					_Utils_Tuple2(2880, 3270),
+					_Utils_Tuple2(8640, 8880)
+				])),
+			A3(
+			$author$project$Mctrot$City,
+			'MCCAFE PUNK',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'PARK',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'SHORTY III',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(420, 1380),
+					_Utils_Tuple2(1860, 2820),
+					_Utils_Tuple2(3300, 4260),
+					_Utils_Tuple2(4740, 5700),
+					_Utils_Tuple2(6180, 7200),
+					_Utils_Tuple2(7620, 8640),
+					_Utils_Tuple2(9060, 10020)
+				]),
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 420),
+					_Utils_Tuple2(1380, 1860),
+					_Utils_Tuple2(2820, 3300),
+					_Utils_Tuple2(4260, 4740),
+					_Utils_Tuple2(5700, 6180),
+					_Utils_Tuple2(7200, 7620),
+					_Utils_Tuple2(8640, 9060),
+					_Utils_Tuple2(10020, 10080)
+				])),
+			A3(
+			$author$project$Mctrot$City,
+			'MICHAELS',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(360, 1440),
+					_Utils_Tuple2(1800, 2880),
+					_Utils_Tuple2(3240, 4320),
+					_Utils_Tuple2(4680, 5760),
+					_Utils_Tuple2(6120, 8640),
+					_Utils_Tuple2(9000, 10080)
+				]),
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 360),
+					_Utils_Tuple2(1440, 1800),
+					_Utils_Tuple2(2880, 3240),
+					_Utils_Tuple2(4320, 4680),
+					_Utils_Tuple2(5760, 6120),
+					_Utils_Tuple2(8640, 9000)
+				])),
+			A3(
+			$author$project$Mctrot$City,
+			'TALLBOY',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(360, 1440),
+					_Utils_Tuple2(1800, 2880),
+					_Utils_Tuple2(3240, 8640),
+					_Utils_Tuple2(9000, 10080)
+				]),
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 360),
+					_Utils_Tuple2(1440, 1800),
+					_Utils_Tuple2(2880, 3240),
+					_Utils_Tuple2(8640, 9000)
+				])),
+			A3(
+			$author$project$Mctrot$City,
+			'UNION',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(360, 1440),
+					_Utils_Tuple2(1800, 2880),
+					_Utils_Tuple2(3240, 4320),
+					_Utils_Tuple2(4680, 5760),
+					_Utils_Tuple2(6120, 7200),
+					_Utils_Tuple2(7560, 8640),
+					_Utils_Tuple2(9000, 10080)
+				]),
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 360),
+					_Utils_Tuple2(1440, 1800),
+					_Utils_Tuple2(2880, 3240),
+					_Utils_Tuple2(4320, 4680),
+					_Utils_Tuple2(5760, 6120),
+					_Utils_Tuple2(7200, 7560),
+					_Utils_Tuple2(8640, 9000)
+				])),
+			A3(
+			$author$project$Mctrot$City,
+			'OVERLAND',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(420, 1440),
+					_Utils_Tuple2(1860, 2880),
+					_Utils_Tuple2(3300, 4320),
+					_Utils_Tuple2(4740, 8640),
+					_Utils_Tuple2(9060, 10080)
+				]),
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 420),
+					_Utils_Tuple2(1440, 1860),
+					_Utils_Tuple2(2880, 3300),
+					_Utils_Tuple2(4320, 4740),
+					_Utils_Tuple2(8640, 9060)
+				])),
+			A3(
+			$author$project$Mctrot$City,
+			'IMMACULATE',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'NYU',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'VARICK',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'麦当劳',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(390, 1440),
+					_Utils_Tuple2(1830, 2880),
+					_Utils_Tuple2(3270, 4320),
+					_Utils_Tuple2(4710, 5760),
+					_Utils_Tuple2(6150, 7200),
+					_Utils_Tuple2(7590, 8640),
+					_Utils_Tuple2(9030, 10080)
+				]),
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 390),
+					_Utils_Tuple2(1440, 1830),
+					_Utils_Tuple2(2880, 3270),
+					_Utils_Tuple2(4320, 4710),
+					_Utils_Tuple2(5760, 6150),
+					_Utils_Tuple2(7200, 7590),
+					_Utils_Tuple2(8640, 9030)
+				])),
+			A3(
+			$author$project$Mctrot$City,
+			'GREENHOUSE',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(420, 1440),
+					_Utils_Tuple2(1860, 2880),
+					_Utils_Tuple2(3300, 8640),
+					_Utils_Tuple2(9060, 10080)
+				]),
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 420),
+					_Utils_Tuple2(1440, 1860),
+					_Utils_Tuple2(2880, 3300),
+					_Utils_Tuple2(8640, 9060)
+				])),
+			A3(
+			$author$project$Mctrot$City,
+			'DELANCEY',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'GREENWICH',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil),
+			A3(
+			$author$project$Mctrot$City,
+			'OCCUPY',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(0, 10080)
+				]),
+			_List_Nil)
+		]));
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $elm$core$Tuple$second = function (_v0) {
+	var y = _v0.b;
+	return y;
 };
-var $author$project$Sudoku$LewisTick = {$: 'LewisTick'};
-var $author$project$Sudoku$Tick = {$: 'Tick'};
-var $elm$core$Platform$Sub$batch = _Platform_batch;
-var $author$project$SimulatedAnnealing$bestEnergy = function (_v0) {
-	var s = _v0.a;
-	return s.bestEnergy;
+var $elm$core$Array$toIndexedList = function (array) {
+	var len = array.a;
+	var helper = F2(
+		function (entry, _v0) {
+			var index = _v0.a;
+			var list = _v0.b;
+			return _Utils_Tuple2(
+				index - 1,
+				A2(
+					$elm$core$List$cons,
+					_Utils_Tuple2(index, entry),
+					list));
+		});
+	return A3(
+		$elm$core$Array$foldr,
+		helper,
+		_Utils_Tuple2(len - 1, _List_Nil),
+		array).b;
 };
+var $author$project$Mctrot$endIndex = A2(
+	$elm$core$Maybe$withDefault,
+	0,
+	A2(
+		$elm$core$Maybe$map,
+		$elm$core$Tuple$first,
+		$elm$core$List$head(
+			A2(
+				$elm$core$List$filter,
+				function (_v0) {
+					var city = _v0.b;
+					return city.name === 'OCCUPY';
+				},
+				$elm$core$Array$toIndexedList($author$project$Mctrot$cities)))));
 var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
 var $elm$core$Basics$ge = _Utils_ge;
 var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
@@ -5512,752 +6263,192 @@ var $elm$core$Array$get = F2(
 			A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, tail)) : $elm$core$Maybe$Just(
 			A3($elm$core$Array$getHelp, startShift, index, tree)));
 	});
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
-var $author$project$Sudoku$cellAt = F3(
-	function (r, c, grid) {
-		return A2(
-			$elm$core$Maybe$withDefault,
-			0,
-			A2($elm$core$Array$get, (r * 9) + c, grid));
-	});
-var $author$project$Sudoku$colValues = F2(
-	function (c, grid) {
-		return A2(
-			$elm$core$List$map,
-			function (r) {
-				return A3($author$project$Sudoku$cellAt, r, c, grid);
-			},
-			A2($elm$core$List$range, 0, 8));
-	});
-var $elm$core$Set$Set_elm_builtin = function (a) {
-	return {$: 'Set_elm_builtin', a: a};
-};
-var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
-var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
-var $elm$core$Set$empty = $elm$core$Set$Set_elm_builtin($elm$core$Dict$empty);
-var $elm$core$Dict$Black = {$: 'Black'};
-var $elm$core$Dict$RBNode_elm_builtin = F5(
-	function (a, b, c, d, e) {
-		return {$: 'RBNode_elm_builtin', a: a, b: b, c: c, d: d, e: e};
-	});
-var $elm$core$Dict$Red = {$: 'Red'};
-var $elm$core$Dict$balance = F5(
-	function (color, key, value, left, right) {
-		if ((right.$ === 'RBNode_elm_builtin') && (right.a.$ === 'Red')) {
-			var _v1 = right.a;
-			var rK = right.b;
-			var rV = right.c;
-			var rLeft = right.d;
-			var rRight = right.e;
-			if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) {
-				var _v3 = left.a;
-				var lK = left.b;
-				var lV = left.c;
-				var lLeft = left.d;
-				var lRight = left.e;
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Red,
-					key,
-					value,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, lK, lV, lLeft, lRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, rK, rV, rLeft, rRight));
-			} else {
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					color,
-					rK,
-					rV,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, left, rLeft),
-					rRight);
-			}
-		} else {
-			if ((((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) && (left.d.$ === 'RBNode_elm_builtin')) && (left.d.a.$ === 'Red')) {
-				var _v5 = left.a;
-				var lK = left.b;
-				var lV = left.c;
-				var _v6 = left.d;
-				var _v7 = _v6.a;
-				var llK = _v6.b;
-				var llV = _v6.c;
-				var llLeft = _v6.d;
-				var llRight = _v6.e;
-				var lRight = left.e;
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Red,
-					lK,
-					lV,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, llK, llV, llLeft, llRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, key, value, lRight, right));
-			} else {
-				return A5($elm$core$Dict$RBNode_elm_builtin, color, key, value, left, right);
-			}
-		}
-	});
-var $elm$core$Basics$compare = _Utils_compare;
-var $elm$core$Dict$insertHelp = F3(
-	function (key, value, dict) {
-		if (dict.$ === 'RBEmpty_elm_builtin') {
-			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, $elm$core$Dict$RBEmpty_elm_builtin, $elm$core$Dict$RBEmpty_elm_builtin);
-		} else {
-			var nColor = dict.a;
-			var nKey = dict.b;
-			var nValue = dict.c;
-			var nLeft = dict.d;
-			var nRight = dict.e;
-			var _v1 = A2($elm$core$Basics$compare, key, nKey);
-			switch (_v1.$) {
-				case 'LT':
-					return A5(
-						$elm$core$Dict$balance,
-						nColor,
-						nKey,
-						nValue,
-						A3($elm$core$Dict$insertHelp, key, value, nLeft),
-						nRight);
-				case 'EQ':
-					return A5($elm$core$Dict$RBNode_elm_builtin, nColor, nKey, value, nLeft, nRight);
-				default:
-					return A5(
-						$elm$core$Dict$balance,
-						nColor,
-						nKey,
-						nValue,
-						nLeft,
-						A3($elm$core$Dict$insertHelp, key, value, nRight));
-			}
-		}
-	});
-var $elm$core$Dict$insert = F3(
-	function (key, value, dict) {
-		var _v0 = A3($elm$core$Dict$insertHelp, key, value, dict);
-		if ((_v0.$ === 'RBNode_elm_builtin') && (_v0.a.$ === 'Red')) {
-			var _v1 = _v0.a;
-			var k = _v0.b;
-			var v = _v0.c;
-			var l = _v0.d;
-			var r = _v0.e;
-			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, k, v, l, r);
-		} else {
-			var x = _v0;
-			return x;
-		}
-	});
-var $elm$core$Set$insert = F2(
-	function (key, _v0) {
-		var dict = _v0.a;
-		return $elm$core$Set$Set_elm_builtin(
-			A3($elm$core$Dict$insert, key, _Utils_Tuple0, dict));
-	});
-var $elm$core$Set$fromList = function (list) {
-	return A3($elm$core$List$foldl, $elm$core$Set$insert, $elm$core$Set$empty, list);
-};
-var $author$project$Sudoku$rowValues = F2(
-	function (r, grid) {
-		return A2(
-			$elm$core$List$map,
-			function (c) {
-				return A3($author$project$Sudoku$cellAt, r, c, grid);
-			},
-			A2($elm$core$List$range, 0, 8));
-	});
-var $elm$core$Dict$sizeHelp = F2(
-	function (n, dict) {
-		sizeHelp:
-		while (true) {
-			if (dict.$ === 'RBEmpty_elm_builtin') {
-				return n;
-			} else {
-				var left = dict.d;
-				var right = dict.e;
-				var $temp$n = A2($elm$core$Dict$sizeHelp, n + 1, right),
-					$temp$dict = left;
-				n = $temp$n;
-				dict = $temp$dict;
-				continue sizeHelp;
-			}
-		}
-	});
-var $elm$core$Dict$size = function (dict) {
-	return A2($elm$core$Dict$sizeHelp, 0, dict);
-};
-var $elm$core$Set$size = function (_v0) {
-	var dict = _v0.a;
-	return $elm$core$Dict$size(dict);
-};
-var $elm$core$List$sum = function (numbers) {
-	return A3($elm$core$List$foldl, $elm$core$Basics$add, 0, numbers);
-};
-var $author$project$Sudoku$energy = function (grid) {
-	var lines = _Utils_ap(
-		A2(
-			$elm$core$List$map,
-			function (r) {
-				return A2($author$project$Sudoku$rowValues, r, grid);
-			},
-			A2($elm$core$List$range, 0, 8)),
-		A2(
-			$elm$core$List$map,
-			function (c) {
-				return A2($author$project$Sudoku$colValues, c, grid);
-			},
-			A2($elm$core$List$range, 0, 8)));
-	return $elm$core$List$sum(
-		A2(
-			$elm$core$List$map,
-			function (values) {
-				return 9 - $elm$core$Set$size(
-					$elm$core$Set$fromList(values));
-			},
-			lines));
-};
-var $elm$core$Basics$pow = _Basics_pow;
-var $author$project$SimulatedAnnealing$Schedule$exponential = F2(
-	function (_v0, iteration) {
-		var alpha = _v0.alpha;
-		var initial = _v0.initial;
-		return initial * A2($elm$core$Basics$pow, alpha, iteration);
-	});
-var $elm$random$Random$andThen = F2(
-	function (callback, _v0) {
-		var genA = _v0.a;
-		return $elm$random$Random$Generator(
-			function (seed) {
-				var _v1 = genA(seed);
-				var result = _v1.a;
-				var newSeed = _v1.b;
-				var _v2 = callback(result);
-				var genB = _v2.a;
-				return genB(newSeed);
-			});
-	});
-var $elm$random$Random$constant = function (value) {
-	return $elm$random$Random$Generator(
-		function (seed) {
-			return _Utils_Tuple2(value, seed);
-		});
-};
-var $elm$core$Array$fromListHelp = F3(
-	function (list, nodeList, nodeListSize) {
-		fromListHelp:
-		while (true) {
-			var _v0 = A2($elm$core$Elm$JsArray$initializeFromList, $elm$core$Array$branchFactor, list);
-			var jsArray = _v0.a;
-			var remainingItems = _v0.b;
-			if (_Utils_cmp(
-				$elm$core$Elm$JsArray$length(jsArray),
-				$elm$core$Array$branchFactor) < 0) {
-				return A2(
-					$elm$core$Array$builderToArray,
-					true,
-					{nodeList: nodeList, nodeListSize: nodeListSize, tail: jsArray});
-			} else {
-				var $temp$list = remainingItems,
-					$temp$nodeList = A2(
-					$elm$core$List$cons,
-					$elm$core$Array$Leaf(jsArray),
-					nodeList),
-					$temp$nodeListSize = nodeListSize + 1;
-				list = $temp$list;
-				nodeList = $temp$nodeList;
-				nodeListSize = $temp$nodeListSize;
-				continue fromListHelp;
-			}
-		}
-	});
-var $elm$core$Array$fromList = function (list) {
-	if (!list.b) {
-		return $elm$core$Array$empty;
-	} else {
-		return A3($elm$core$Array$fromListHelp, list, _List_Nil, 0);
-	}
-};
-var $author$project$Sudoku$pickTwoDistinct = function (cells) {
-	var n = $elm$core$List$length(cells);
-	var asArray = $elm$core$Array$fromList(cells);
-	var at = function (i) {
-		return A2(
-			$elm$core$Maybe$withDefault,
-			0,
-			A2($elm$core$Array$get, i, asArray));
-	};
+var $author$project$Mctrot$dayLength = 24 * 60;
+var $author$project$Mctrot$weekLength = 7 * $author$project$Mctrot$dayLength;
+var $author$project$Mctrot$openWindowsFor = function (cityIndex) {
 	return A2(
-		$elm$random$Random$andThen,
-		function (i) {
-			return A2(
-				$elm$random$Random$map,
-				function (j0) {
-					var j = (_Utils_cmp(j0, i) > -1) ? (j0 + 1) : j0;
-					return _Utils_Tuple2(
-						at(i),
-						at(j));
-				},
-				A2($elm$random$Random$int, 0, n - 2));
-		},
-		A2($elm$random$Random$int, 0, n - 1));
-};
-var $elm$core$Elm$JsArray$unsafeSet = _JsArray_unsafeSet;
-var $elm$core$Array$setHelp = F4(
-	function (shift, index, value, tree) {
-		var pos = $elm$core$Array$bitMask & (index >>> shift);
-		var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
-		if (_v0.$ === 'SubTree') {
-			var subTree = _v0.a;
-			var newSub = A4($elm$core$Array$setHelp, shift - $elm$core$Array$shiftStep, index, value, subTree);
-			return A3(
-				$elm$core$Elm$JsArray$unsafeSet,
-				pos,
-				$elm$core$Array$SubTree(newSub),
-				tree);
-		} else {
-			var values = _v0.a;
-			var newLeaf = A3($elm$core$Elm$JsArray$unsafeSet, $elm$core$Array$bitMask & index, value, values);
-			return A3(
-				$elm$core$Elm$JsArray$unsafeSet,
-				pos,
-				$elm$core$Array$Leaf(newLeaf),
-				tree);
-		}
-	});
-var $elm$core$Array$set = F3(
-	function (index, value, array) {
-		var len = array.a;
-		var startShift = array.b;
-		var tree = array.c;
-		var tail = array.d;
-		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? array : ((_Utils_cmp(
-			index,
-			$elm$core$Array$tailIndex(len)) > -1) ? A4(
-			$elm$core$Array$Array_elm_builtin,
-			len,
-			startShift,
-			tree,
-			A3($elm$core$Elm$JsArray$unsafeSet, $elm$core$Array$bitMask & index, value, tail)) : A4(
-			$elm$core$Array$Array_elm_builtin,
-			len,
-			startShift,
-			A4($elm$core$Array$setHelp, startShift, index, value, tree),
-			tail));
-	});
-var $author$project$Sudoku$swapCells = F3(
-	function (posA, posB, grid) {
-		var b = A2(
-			$elm$core$Maybe$withDefault,
-			0,
-			A2($elm$core$Array$get, posB, grid));
-		var a = A2(
-			$elm$core$Maybe$withDefault,
-			0,
-			A2($elm$core$Array$get, posA, grid));
-		return A3(
-			$elm$core$Array$set,
-			posB,
-			a,
-			A3($elm$core$Array$set, posA, b, grid));
-	});
-var $elm$core$List$append = F2(
-	function (xs, ys) {
-		if (!ys.b) {
-			return xs;
-		} else {
-			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
-		}
-	});
-var $elm$core$List$concat = function (lists) {
-	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
-};
-var $elm$core$List$concatMap = F2(
-	function (f, list) {
-		return $elm$core$List$concat(
-			A2($elm$core$List$map, f, list));
-	});
-var $author$project$Sudoku$boxPositions = A2(
-	$elm$core$List$concatMap,
-	function (boxRow) {
-		return A2(
-			$elm$core$List$map,
-			function (boxCol) {
-				return A2(
-					$elm$core$List$concatMap,
-					function (dr) {
-						return A2(
-							$elm$core$List$map,
-							function (dc) {
-								return (((boxRow * 3) + dr) * 9) + ((boxCol * 3) + dc);
-							},
-							A2($elm$core$List$range, 0, 2));
-					},
-					A2($elm$core$List$range, 0, 2));
-			},
-			A2($elm$core$List$range, 0, 2));
-	},
-	A2($elm$core$List$range, 0, 2));
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
-var $author$project$Sudoku$parseCell = function (c) {
-	return _Utils_eq(
-		c,
-		_Utils_chr('.')) ? 0 : ($elm$core$Char$toCode(c) - $elm$core$Char$toCode(
-		_Utils_chr('0')));
-};
-var $author$project$Sudoku$puzzleStringEasy = '5..4673.99.381.4271742.3...231976854857124.9.4963.8172....8926.782641..5.1....7.8';
-var $author$project$Sudoku$puzzleString = $author$project$Sudoku$puzzleStringEasy;
-var $elm$core$String$foldr = _String_foldr;
-var $elm$core$String$toList = function (string) {
-	return A3($elm$core$String$foldr, $elm$core$List$cons, _List_Nil, string);
-};
-var $author$project$Sudoku$givenGrid = $elm$core$Array$fromList(
-	A2(
-		$elm$core$List$map,
-		$author$project$Sudoku$parseCell,
-		$elm$core$String$toList($author$project$Sudoku$puzzleString)));
-var $elm$core$Elm$JsArray$map = _JsArray_map;
-var $elm$core$Array$map = F2(
-	function (func, _v0) {
-		var len = _v0.a;
-		var startShift = _v0.b;
-		var tree = _v0.c;
-		var tail = _v0.d;
-		var helper = function (node) {
-			if (node.$ === 'SubTree') {
-				var subTree = node.a;
-				return $elm$core$Array$SubTree(
-					A2($elm$core$Elm$JsArray$map, helper, subTree));
-			} else {
-				var values = node.a;
-				return $elm$core$Array$Leaf(
-					A2($elm$core$Elm$JsArray$map, func, values));
-			}
-		};
-		return A4(
-			$elm$core$Array$Array_elm_builtin,
-			len,
-			startShift,
-			A2($elm$core$Elm$JsArray$map, helper, tree),
-			A2($elm$core$Elm$JsArray$map, func, tail));
-	});
-var $elm$core$Basics$neq = _Utils_notEqual;
-var $author$project$Sudoku$isGiven = A2(
-	$elm$core$Array$map,
-	function (v) {
-		return !(!v);
-	},
-	$author$project$Sudoku$givenGrid);
-var $elm$core$Basics$not = _Basics_not;
-var $author$project$Sudoku$freeCellsIn = function (positions) {
-	return A2(
-		$elm$core$List$filter,
-		function (p) {
-			return !A2(
-				$elm$core$Maybe$withDefault,
-				false,
-				A2($elm$core$Array$get, p, $author$project$Sudoku$isGiven));
-		},
-		positions);
-};
-var $author$project$Sudoku$swappableBoxes = A2(
-	$elm$core$List$filter,
-	function (free) {
-		return $elm$core$List$length(free) >= 2;
-	},
-	A2($elm$core$List$map, $author$project$Sudoku$freeCellsIn, $author$project$Sudoku$boxPositions));
-var $elm$random$Random$addOne = function (value) {
-	return _Utils_Tuple2(1, value);
-};
-var $elm$core$Basics$abs = function (n) {
-	return (n < 0) ? (-n) : n;
-};
-var $elm$random$Random$float = F2(
-	function (a, b) {
-		return $elm$random$Random$Generator(
-			function (seed0) {
-				var seed1 = $elm$random$Random$next(seed0);
-				var range = $elm$core$Basics$abs(b - a);
-				var n1 = $elm$random$Random$peel(seed1);
-				var n0 = $elm$random$Random$peel(seed0);
-				var lo = (134217727 & n1) * 1.0;
-				var hi = (67108863 & n0) * 1.0;
-				var val = ((hi * 134217728.0) + lo) / 9007199254740992.0;
-				var scaled = (val * range) + a;
-				return _Utils_Tuple2(
-					scaled,
-					$elm$random$Random$next(seed1));
-			});
-	});
-var $elm$random$Random$getByWeight = F3(
-	function (_v0, others, countdown) {
-		getByWeight:
-		while (true) {
-			var weight = _v0.a;
-			var value = _v0.b;
-			if (!others.b) {
-				return value;
-			} else {
-				var second = others.a;
-				var otherOthers = others.b;
-				if (_Utils_cmp(
-					countdown,
-					$elm$core$Basics$abs(weight)) < 1) {
-					return value;
-				} else {
-					var $temp$_v0 = second,
-						$temp$others = otherOthers,
-						$temp$countdown = countdown - $elm$core$Basics$abs(weight);
-					_v0 = $temp$_v0;
-					others = $temp$others;
-					countdown = $temp$countdown;
-					continue getByWeight;
-				}
-			}
-		}
-	});
-var $elm$random$Random$weighted = F2(
-	function (first, others) {
-		var normalize = function (_v0) {
-			var weight = _v0.a;
-			return $elm$core$Basics$abs(weight);
-		};
-		var total = normalize(first) + $elm$core$List$sum(
-			A2($elm$core$List$map, normalize, others));
-		return A2(
-			$elm$random$Random$map,
-			A2($elm$random$Random$getByWeight, first, others),
-			A2($elm$random$Random$float, 0, total));
-	});
-var $elm$random$Random$uniform = F2(
-	function (value, valueList) {
-		return A2(
-			$elm$random$Random$weighted,
-			$elm$random$Random$addOne(value),
-			A2($elm$core$List$map, $elm$random$Random$addOne, valueList));
-	});
-var $author$project$Sudoku$neighbor = function (grid) {
-	var _v0 = $author$project$Sudoku$swappableBoxes;
-	if (!_v0.b) {
-		return $elm$random$Random$constant(grid);
-	} else {
-		var first = _v0.a;
-		var rest = _v0.b;
-		return A2(
-			$elm$random$Random$map,
-			function (_v1) {
-				var posA = _v1.a;
-				var posB = _v1.b;
-				return A3($author$project$Sudoku$swapCells, posA, posB, grid);
-			},
-			A2(
-				$elm$random$Random$andThen,
-				$author$project$Sudoku$pickTwoDistinct,
-				A2($elm$random$Random$uniform, first, rest)));
-	}
-};
-var $author$project$Sudoku$config = {
-	energy: $author$project$Sudoku$energy,
-	neighbor: $author$project$Sudoku$neighbor,
-	stoppingTemperature: 0.000,
-	temperature: $author$project$SimulatedAnnealing$Schedule$exponential(
-		{alpha: 0.9997, initial: 1.0})
-};
-var $author$project$SimulatedAnnealing$isDone = F2(
-	function (config, _v0) {
-		var s = _v0.a;
-		return _Utils_cmp(
-			config.temperature(s.iteration),
-			config.stoppingTemperature) < 1;
-	});
-var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $elm$browser$Browser$AnimationManager$Time = function (a) {
-	return {$: 'Time', a: a};
-};
-var $elm$browser$Browser$AnimationManager$State = F3(
-	function (subs, request, oldTime) {
-		return {oldTime: oldTime, request: request, subs: subs};
-	});
-var $elm$browser$Browser$AnimationManager$init = $elm$core$Task$succeed(
-	A3($elm$browser$Browser$AnimationManager$State, _List_Nil, $elm$core$Maybe$Nothing, 0));
-var $elm$core$Process$kill = _Scheduler_kill;
-var $elm$browser$Browser$AnimationManager$now = _Browser_now(_Utils_Tuple0);
-var $elm$browser$Browser$AnimationManager$rAF = _Browser_rAF(_Utils_Tuple0);
-var $elm$core$Platform$sendToSelf = _Platform_sendToSelf;
-var $elm$core$Process$spawn = _Scheduler_spawn;
-var $elm$browser$Browser$AnimationManager$onEffects = F3(
-	function (router, subs, _v0) {
-		var oldTime = _v0.oldTime;
-		var request = _v0.request;
-		var _v1 = _Utils_Tuple2(request, subs);
-		if (_v1.a.$ === 'Nothing') {
-			if (!_v1.b.b) {
-				var _v2 = _v1.a;
-				return $elm$browser$Browser$AnimationManager$init;
-			} else {
-				var _v4 = _v1.a;
-				return A2(
-					$elm$core$Task$andThen,
-					function (pid) {
-						return A2(
-							$elm$core$Task$andThen,
-							function (time) {
-								return $elm$core$Task$succeed(
-									A3(
-										$elm$browser$Browser$AnimationManager$State,
-										subs,
-										$elm$core$Maybe$Just(pid),
-										time));
-							},
-							$elm$browser$Browser$AnimationManager$now);
-					},
-					$elm$core$Process$spawn(
-						A2(
-							$elm$core$Task$andThen,
-							$elm$core$Platform$sendToSelf(router),
-							$elm$browser$Browser$AnimationManager$rAF)));
-			}
-		} else {
-			if (!_v1.b.b) {
-				var pid = _v1.a.a;
-				return A2(
-					$elm$core$Task$andThen,
-					function (_v3) {
-						return $elm$browser$Browser$AnimationManager$init;
-					},
-					$elm$core$Process$kill(pid));
-			} else {
-				return $elm$core$Task$succeed(
-					A3($elm$browser$Browser$AnimationManager$State, subs, request, oldTime));
-			}
-		}
-	});
-var $elm$browser$Browser$AnimationManager$onSelfMsg = F3(
-	function (router, newTime, _v0) {
-		var oldTime = _v0.oldTime;
-		var subs = _v0.subs;
-		var send = function (sub) {
-			if (sub.$ === 'Time') {
-				var tagger = sub.a;
-				return A2(
-					$elm$core$Platform$sendToApp,
-					router,
-					tagger(
-						$elm$time$Time$millisToPosix(newTime)));
-			} else {
-				var tagger = sub.a;
-				return A2(
-					$elm$core$Platform$sendToApp,
-					router,
-					tagger(newTime - oldTime));
-			}
-		};
-		return A2(
-			$elm$core$Task$andThen,
-			function (pid) {
-				return A2(
-					$elm$core$Task$andThen,
-					function (_v1) {
-						return $elm$core$Task$succeed(
-							A3(
-								$elm$browser$Browser$AnimationManager$State,
-								subs,
-								$elm$core$Maybe$Just(pid),
-								newTime));
-					},
-					$elm$core$Task$sequence(
-						A2($elm$core$List$map, send, subs)));
-			},
-			$elm$core$Process$spawn(
-				A2(
-					$elm$core$Task$andThen,
-					$elm$core$Platform$sendToSelf(router),
-					$elm$browser$Browser$AnimationManager$rAF)));
-	});
-var $elm$browser$Browser$AnimationManager$Delta = function (a) {
-	return {$: 'Delta', a: a};
-};
-var $elm$core$Basics$composeL = F3(
-	function (g, f, x) {
-		return g(
-			f(x));
-	});
-var $elm$browser$Browser$AnimationManager$subMap = F2(
-	function (func, sub) {
-		if (sub.$ === 'Time') {
-			var tagger = sub.a;
-			return $elm$browser$Browser$AnimationManager$Time(
-				A2($elm$core$Basics$composeL, func, tagger));
-		} else {
-			var tagger = sub.a;
-			return $elm$browser$Browser$AnimationManager$Delta(
-				A2($elm$core$Basics$composeL, func, tagger));
-		}
-	});
-_Platform_effectManagers['Browser.AnimationManager'] = _Platform_createManager($elm$browser$Browser$AnimationManager$init, $elm$browser$Browser$AnimationManager$onEffects, $elm$browser$Browser$AnimationManager$onSelfMsg, 0, $elm$browser$Browser$AnimationManager$subMap);
-var $elm$browser$Browser$AnimationManager$subscription = _Platform_leaf('Browser.AnimationManager');
-var $elm$browser$Browser$AnimationManager$onAnimationFrame = function (tagger) {
-	return $elm$browser$Browser$AnimationManager$subscription(
-		$elm$browser$Browser$AnimationManager$Time(tagger));
-};
-var $elm$browser$Browser$Events$onAnimationFrame = $elm$browser$Browser$AnimationManager$onAnimationFrame;
-var $author$project$Sudoku$solved = function (state) {
-	return !$author$project$SimulatedAnnealing$bestEnergy(state);
-};
-var $author$project$Sudoku$subscriptions = function (model) {
-	return $elm$core$Platform$Sub$batch(
+		$elm$core$Maybe$withDefault,
 		_List_fromArray(
 			[
-				function () {
-				var _v0 = model.saState;
-				if (_v0.$ === 'Just') {
-					var state = _v0.a;
-					return (model.running && ((!$author$project$Sudoku$solved(state)) && (!A2($author$project$SimulatedAnnealing$isDone, $author$project$Sudoku$config, state)))) ? $elm$browser$Browser$Events$onAnimationFrame(
-						function (_v1) {
-							return $author$project$Sudoku$Tick;
-						}) : $elm$core$Platform$Sub$none;
-				} else {
-					return $elm$core$Platform$Sub$none;
-				}
-			}(),
-				function () {
-				var _v2 = model.lewis;
-				if (_v2.$ === 'Just') {
-					var run = _v2.a;
-					return (model.lewisRunning && ((!(!$author$project$SimulatedAnnealing$bestEnergy(run.state))) && (!A2($author$project$SimulatedAnnealing$isDone, run.config, run.state)))) ? $elm$browser$Browser$Events$onAnimationFrame(
-						function (_v3) {
-							return $author$project$Sudoku$LewisTick;
-						}) : $elm$core$Platform$Sub$none;
-				} else {
-					return $elm$core$Platform$Sub$none;
-				}
-			}()
-			]));
+				_Utils_Tuple2(0, $author$project$Mctrot$weekLength)
+			]),
+		A2(
+			$elm$core$Maybe$map,
+			function ($) {
+				return $.openWindows;
+			},
+			A2($elm$core$Array$get, cityIndex, $author$project$Mctrot$cities)));
 };
-var $author$project$Sudoku$GotReheatSeed = function (a) {
-	return {$: 'GotReheatSeed', a: a};
-};
-var $author$project$SimulatedAnnealing$State = function (a) {
-	return {$: 'State', a: a};
-};
-var $author$project$SimulatedAnnealing$init = F3(
-	function (config, seed, initial) {
-		var e = config.energy(initial);
-		return $author$project$SimulatedAnnealing$State(
-			{best: initial, bestEnergy: e, current: initial, currentEnergy: e, iteration: 0, seed: seed});
+var $elm$core$Maybe$andThen = F2(
+	function (callback, maybeValue) {
+		if (maybeValue.$ === 'Just') {
+			var value = maybeValue.a;
+			return callback(value);
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $author$project$Mctrot$distanceMeters = $elm$core$Array$fromList(
+	_List_fromArray(
+		[
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[0, 1127, 1527, 1509, 2005, 2475, 2706, 3143, 3706, 3846, 4062, 4438, 4505, 5308, 5767, 6262, 6061, 6848, 7498, 6961, 7374, 8144, 7969, 8015, 7942, 8080, 8219, 8269, 8636, 8660, 8831, 9511, 9264, 9641, 9854, 9748, 10530, 10224, 10279, 11221, 11267, 11508, 12607, 11759, 12755, 13088, 13777])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[1127, 0, 2529, 420, 1180, 3507, 1795, 4175, 2579, 2771, 5093, 3311, 3462, 4231, 6895, 5135, 7188, 5897, 6412, 5834, 6247, 7060, 6841, 6887, 6815, 6953, 7092, 7141, 7509, 7533, 7703, 8415, 8137, 8513, 8727, 8620, 9550, 9096, 9152, 10209, 10140, 10380, 11480, 10632, 11627, 11961, 12650])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[1527, 2529, 0, 2109, 1358, 1127, 4063, 2037, 3344, 4964, 2955, 4070, 5655, 6423, 4854, 6072, 5418, 8090, 8605, 7420, 7888, 9251, 8996, 8529, 8456, 8539, 9157, 8783, 9095, 9175, 9345, 10331, 9779, 10266, 10374, 10262, 11286, 10743, 10794, 11855, 11787, 12022, 13127, 12279, 13274, 13471, 14291])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[1509, 420, 2109, 0, 760, 3133, 2015, 3801, 2252, 2916, 4719, 2984, 3608, 4376, 6618, 4808, 7090, 6043, 6557, 5717, 6130, 7205, 6987, 6771, 6698, 6836, 7237, 7024, 7392, 7416, 7586, 8561, 8020, 8508, 8615, 8503, 9527, 8985, 9035, 10097, 10028, 10264, 11368, 10520, 11516, 11844, 12533])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[2005, 1180, 1358, 760, 0, 2484, 2714, 3395, 1986, 3615, 4313, 2712, 4306, 5074, 6211, 4714, 6775, 6741, 7256, 6062, 6531, 7893, 7638, 7172, 7099, 7181, 7800, 7425, 7737, 7817, 7987, 8973, 8421, 8909, 9016, 8904, 9928, 9386, 9436, 10498, 10429, 10665, 11769, 10921, 11917, 12114, 12934])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[2475, 3507, 1127, 3133, 2484, 0, 4782, 910, 4471, 5922, 1829, 5196, 6581, 7384, 3727, 7199, 4291, 8924, 9575, 8547, 9015, 10220, 10120, 9656, 9583, 9666, 10284, 9910, 10222, 10302, 10472, 11458, 10905, 11393, 11500, 11389, 12412, 11870, 11921, 12982, 12913, 13149, 14254, 13405, 14401, 14598, 15418])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[2706, 1795, 4063, 2015, 2714, 4782, 0, 5450, 3105, 1140, 6298, 3836, 1831, 2602, 7948, 5517, 8241, 4266, 4793, 6132, 6445, 5438, 6132, 6585, 6924, 7251, 6677, 7251, 7807, 7643, 7813, 6805, 8103, 7487, 8038, 8586, 7919, 8479, 9118, 8610, 9169, 10334, 10481, 9250, 10289, 11586, 11704])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[3143, 4175, 2037, 3801, 3395, 910, 5450, 0, 5375, 6590, 954, 6107, 7249, 8052, 2852, 8109, 3416, 9592, 10243, 9457, 9925, 10888, 10788, 10566, 10493, 10576, 11038, 10820, 11132, 11212, 11382, 12255, 11816, 12303, 12411, 12299, 13275, 12780, 12831, 13892, 13824, 14059, 15164, 14316, 15311, 15508, 16328])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[3706, 2579, 3344, 2252, 1986, 4471, 3105, 5375, 0, 2821, 6293, 750, 2931, 3553, 8191, 2752, 8755, 5263, 5393, 4100, 4568, 5931, 5676, 5209, 5136, 5219, 5838, 5463, 5775, 5855, 6025, 7011, 6459, 6946, 7054, 6942, 7966, 7423, 7474, 8535, 8467, 8702, 9807, 8959, 9954, 10151, 10971])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[3846, 2771, 4964, 2916, 3615, 5922, 1140, 6590, 2821, 0, 7438, 2713, 691, 1462, 9088, 4388, 9381, 3126, 3652, 4997, 5310, 4298, 4993, 5450, 5790, 6116, 5538, 6116, 6672, 6508, 6678, 5665, 6963, 6347, 6898, 7446, 6778, 7339, 7978, 7469, 8028, 9193, 9341, 8110, 9149, 10446, 10564])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[4062, 5093, 2955, 4719, 4313, 1829, 6298, 954, 6293, 7438, 0, 7025, 8097, 8900, 1898, 9027, 2462, 10440, 11090, 10375, 10844, 11736, 11706, 11485, 11412, 11494, 11956, 11738, 12050, 12130, 12300, 13103, 12734, 13222, 13329, 13217, 14122, 13699, 13749, 14811, 14742, 14978, 16082, 15234, 16230, 16427, 17247])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[4438, 3311, 4070, 2984, 2712, 5196, 3836, 6107, 750, 2713, 7025, 0, 2544, 2867, 8923, 2003, 9487, 4552, 4644, 3351, 3819, 5181, 4926, 4460, 4387, 4469, 5088, 4713, 5025, 5105, 5275, 6261, 5709, 6197, 6304, 6192, 7216, 6674, 6724, 7786, 7717, 7953, 9057, 8209, 9205, 9402, 10222])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[4505, 3462, 5655, 3608, 4306, 6581, 1831, 7249, 2931, 691, 8097, 2544, 0, 1111, 9747, 4061, 10040, 2435, 3300, 4650, 4963, 3944, 4644, 5103, 5442, 5769, 5187, 5769, 6325, 6161, 6331, 5280, 6602, 5974, 6534, 7084, 6087, 6966, 7614, 6778, 7600, 8815, 8912, 7418, 8458, 10017, 10135])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[5308, 4231, 6423, 4376, 5074, 7384, 2602, 8052, 3553, 1462, 8900, 2867, 1111, 0, 10550, 3011, 10843, 1755, 2191, 3542, 3855, 2836, 3535, 3994, 4334, 4661, 4078, 4661, 5217, 5053, 5223, 4203, 5503, 4885, 5438, 5986, 5407, 5877, 6518, 6098, 6566, 7732, 7879, 6738, 7770, 8984, 9102])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[5767, 6895, 4854, 6618, 6211, 3727, 7948, 2852, 8191, 9088, 1898, 8923, 9747, 10550, 0, 10926, 564, 12089, 12740, 12274, 12742, 13386, 13420, 13383, 13310, 13392, 13855, 13636, 13948, 14028, 14198, 14753, 14632, 15039, 15227, 15115, 15772, 15597, 15647, 16463, 16640, 16876, 17980, 17103, 18128, 18325, 19145])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[6262, 5135, 6072, 4808, 4714, 7199, 5517, 8109, 2752, 4388, 9027, 2003, 4061, 3011, 10926, 0, 11490, 2923, 2641, 1348, 1816, 3179, 2924, 2457, 2384, 2467, 3085, 2711, 3023, 3103, 3273, 4259, 3707, 4194, 4301, 4190, 5214, 4671, 4722, 5783, 5714, 5950, 7055, 6206, 7202, 7399, 8219])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[6061, 7188, 5418, 7090, 6775, 4291, 8241, 3416, 8755, 9381, 2462, 9487, 10040, 10843, 564, 11490, 0, 12383, 13034, 12783, 13195, 13679, 13714, 13836, 13763, 13902, 14182, 14090, 14458, 14482, 14652, 15046, 15086, 15332, 15633, 15569, 16066, 16050, 16101, 16757, 17094, 17329, 18434, 17397, 18436, 18889, 19598])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[6848, 5897, 8090, 6043, 6741, 8924, 4266, 9592, 5263, 3126, 10440, 4552, 2435, 1755, 12089, 2923, 12383, 0, 1291, 2757, 3070, 1933, 2634, 3099, 3549, 3876, 3177, 3876, 4432, 4268, 4438, 3269, 4591, 3963, 4523, 5073, 3683, 4955, 5603, 4374, 5569, 6784, 6881, 5014, 6053, 7986, 8104])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[7498, 6412, 8605, 6557, 7256, 9575, 4793, 10243, 5393, 3652, 11090, 4644, 3300, 2191, 12740, 2641, 13034, 1291, 0, 1647, 1847, 655, 1347, 1812, 2292, 2749, 1890, 2638, 3303, 3030, 3198, 2022, 3315, 2697, 3250, 3798, 3234, 3689, 4330, 3925, 4385, 5544, 5698, 4565, 5588, 6802, 6921])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[6961, 5834, 7420, 5717, 6062, 8547, 6132, 9457, 4100, 4997, 10375, 3351, 4650, 3542, 12274, 1348, 12783, 2757, 1647, 0, 536, 1899, 1644, 1177, 1105, 1119, 1806, 1431, 1675, 1823, 1993, 2979, 2427, 2915, 3022, 2910, 3934, 3392, 3442, 4504, 4435, 4662, 5775, 4927, 5922, 6127, 6940])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[7374, 6247, 7888, 6130, 6531, 9015, 6445, 9925, 4568, 5310, 10844, 3819, 4963, 3855, 12742, 1816, 13195, 3070, 1847, 536, 0, 1363, 1108, 641, 568, 916, 1269, 895, 1472, 1287, 1457, 2443, 1890, 2378, 2485, 2374, 3397, 2855, 2906, 3967, 3898, 4134, 5239, 4390, 5386, 5809, 6403])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[8144, 7060, 9251, 7205, 7893, 10220, 5438, 10888, 5931, 4298, 11736, 5181, 3944, 2836, 13386, 3179, 13679, 1933, 655, 1899, 1363, 0, 704, 1171, 1650, 2106, 1247, 1995, 2661, 2387, 2555, 1367, 2672, 2054, 2607, 3155, 2583, 3045, 3687, 3274, 3731, 4900, 5043, 3914, 4934, 6148, 6266])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[7969, 6841, 8996, 6987, 7638, 10120, 6132, 10788, 5676, 4993, 11706, 4926, 4644, 3535, 13420, 2924, 13714, 2634, 1347, 1644, 1108, 704, 0, 467, 960, 1414, 558, 1304, 1970, 1696, 1866, 1577, 1984, 1672, 1919, 2467, 2792, 2510, 2999, 3483, 3474, 4263, 4814, 3933, 4929, 5702, 6010])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[8015, 6887, 8529, 6771, 7172, 9656, 6585, 10566, 5209, 5450, 11485, 4460, 5103, 3994, 13383, 2457, 13836, 3099, 1812, 1177, 641, 1171, 467, 0, 495, 948, 715, 838, 1504, 1230, 1400, 2044, 1521, 2009, 2116, 2004, 3028, 2485, 2536, 3598, 3529, 3871, 4869, 4021, 5016, 5516, 6033])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[7942, 6815, 8456, 6698, 7099, 9583, 6924, 10493, 5136, 5790, 11412, 4387, 5442, 4334, 13310, 2384, 13763, 3549, 2292, 1105, 568, 1650, 960, 495, 0, 457, 701, 347, 1013, 739, 909, 1874, 1322, 1810, 1917, 1806, 2829, 2287, 2337, 3399, 3330, 3586, 4670, 3822, 4818, 5262, 5835])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[8080, 6953, 8539, 6836, 7181, 9666, 7251, 10576, 5219, 6116, 11494, 4469, 5769, 4661, 13392, 2467, 13902, 3876, 2749, 1119, 916, 2106, 1414, 948, 457, 0, 860, 437, 556, 829, 999, 2033, 1481, 1969, 2076, 1964, 2988, 2445, 2496, 3558, 3489, 3543, 4825, 3981, 4976, 5008, 5852])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[8219, 7092, 9157, 7237, 7800, 10284, 6677, 11038, 5838, 5538, 11956, 5088, 5187, 4078, 13855, 3085, 14182, 3177, 1890, 1806, 1269, 1247, 558, 715, 701, 860, 0, 749, 1414, 1140, 1309, 1339, 1426, 1426, 1635, 1909, 2547, 2005, 2441, 3117, 3048, 3706, 4388, 3540, 4536, 5197, 5584])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[8269, 7141, 8783, 7024, 7425, 9910, 7251, 10820, 5463, 6116, 11738, 4713, 5769, 4661, 13636, 2711, 14090, 3876, 2638, 1431, 895, 1995, 1304, 838, 347, 437, 749, 0, 666, 392, 562, 1635, 1083, 1571, 1678, 1566, 2590, 2048, 2098, 3160, 3091, 3239, 4431, 3583, 4579, 4915, 5584])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[8636, 7509, 9095, 7392, 7737, 10222, 7807, 11132, 5775, 6672, 12050, 5025, 6325, 5217, 13948, 3023, 14458, 4432, 3303, 1675, 1472, 2661, 1970, 1504, 1013, 556, 1414, 666, 0, 274, 443, 1625, 1072, 1560, 1667, 1556, 2579, 2037, 2088, 3149, 3080, 2987, 4270, 3572, 4568, 4452, 5296])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[8660, 7533, 9175, 7416, 7817, 10302, 7643, 11212, 5855, 6508, 12130, 5105, 6161, 5053, 14028, 3103, 14482, 4268, 3030, 1823, 1287, 2387, 1696, 1230, 739, 829, 1140, 392, 274, 0, 170, 1350, 798, 1286, 1393, 1281, 2305, 1763, 1813, 2875, 2806, 2847, 4130, 3298, 4294, 4523, 5192])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[8831, 7703, 9345, 7586, 7987, 10472, 7813, 11382, 6025, 6678, 12300, 5275, 6331, 5223, 14198, 3273, 14652, 4438, 3198, 1993, 1457, 2555, 1866, 1400, 909, 999, 1309, 562, 443, 170, 0, 1338, 665, 1172, 1279, 1148, 2191, 1648, 1680, 2761, 2692, 2677, 3960, 3184, 4179, 4352, 5022])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[9511, 8415, 10331, 8561, 8973, 11458, 6805, 12255, 7011, 5665, 13103, 6261, 5280, 4203, 14753, 4259, 15046, 3269, 2022, 2979, 2443, 1367, 1577, 2044, 1874, 2033, 1339, 1635, 1625, 1350, 1338, 0, 1323, 696, 1255, 1805, 1231, 1687, 2335, 1922, 2363, 3541, 3676, 2561, 3567, 4781, 4899])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[9264, 8137, 9779, 8020, 8421, 10905, 8103, 11816, 6459, 6963, 12734, 5709, 6602, 5503, 14632, 3707, 15086, 4591, 3315, 2427, 1890, 2672, 1984, 1521, 1322, 1481, 1426, 1083, 1072, 798, 665, 1323, 0, 628, 735, 483, 1647, 1105, 1015, 2217, 2148, 2350, 3451, 2640, 3636, 3995, 4513])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[9641, 8513, 10266, 8508, 8909, 11393, 7487, 12303, 6946, 6347, 13222, 6197, 5974, 4885, 15039, 4194, 15332, 3963, 2697, 2915, 2378, 2054, 1672, 2009, 1810, 1969, 1426, 1571, 1560, 1286, 1172, 696, 628, 0, 560, 1109, 1143, 992, 1640, 1832, 1824, 2846, 3164, 2262, 3258, 4156, 4360])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[9854, 8727, 10374, 8615, 9016, 11500, 8038, 12411, 7054, 6898, 13329, 6304, 6534, 5438, 15227, 4301, 15633, 4523, 3250, 3022, 2485, 2607, 1919, 2116, 1917, 2076, 1635, 1678, 1667, 1393, 1279, 1255, 735, 560, 0, 550, 912, 591, 1081, 1595, 1566, 2345, 2906, 2025, 3021, 3784, 4102])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[9748, 8620, 10262, 8503, 8904, 11389, 8586, 12299, 6942, 7446, 13217, 6192, 7084, 5986, 15115, 4190, 15569, 5073, 3798, 2910, 2374, 3155, 2467, 2004, 1806, 1964, 1909, 1566, 1556, 1281, 1148, 1805, 483, 1109, 550, 0, 1462, 769, 532, 1881, 1812, 1867, 2968, 2304, 3300, 3512, 4029])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[10530, 9550, 11286, 9527, 9928, 12412, 7919, 13275, 7966, 6778, 14122, 7216, 6087, 5407, 15772, 5214, 16066, 3683, 3234, 3934, 3397, 2583, 2792, 3028, 2829, 2988, 2547, 2590, 2579, 2305, 2191, 1231, 1647, 1143, 912, 1462, 0, 1342, 1990, 691, 1941, 3156, 3253, 1331, 2371, 4358, 4422])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[10224, 9096, 10743, 8985, 9386, 11870, 8479, 12780, 7423, 7339, 13699, 6674, 6966, 5877, 15597, 4671, 16050, 4955, 3689, 3392, 2855, 3045, 2510, 2485, 2287, 2445, 2005, 2048, 2037, 1763, 1648, 1687, 1105, 992, 591, 769, 1342, 0, 648, 1112, 1043, 1883, 2383, 1535, 2531, 3193, 3579])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[10279, 9152, 10794, 9035, 9436, 11921, 9118, 12831, 7474, 7978, 13749, 6724, 7614, 6518, 15647, 4722, 16101, 5603, 4330, 3442, 2906, 3687, 2999, 2536, 2337, 2496, 2441, 2098, 2088, 1813, 1680, 2335, 1015, 1640, 1081, 532, 1990, 648, 0, 1646, 1381, 1335, 2436, 1905, 2900, 2980, 3498])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[11221, 10209, 11855, 10097, 10498, 12982, 8610, 13892, 8535, 7469, 14811, 7786, 6778, 6098, 16463, 5783, 16757, 4374, 3925, 4504, 3967, 3274, 3483, 3598, 3399, 3558, 3117, 3160, 3149, 2875, 2761, 1922, 2217, 1832, 1595, 1881, 691, 1112, 1646, 0, 1419, 2634, 2732, 808, 1680, 3836, 3900])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[11267, 10140, 11787, 10028, 10429, 12913, 9169, 13824, 8467, 8028, 14742, 7717, 7600, 6566, 16640, 5714, 17094, 5569, 4385, 4435, 3898, 3731, 3474, 3529, 3330, 3489, 3048, 3091, 3080, 2806, 2692, 2363, 2148, 1824, 1566, 1812, 1941, 1043, 1381, 1419, 0, 1216, 1340, 939, 1635, 2417, 2536])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[11508, 10380, 12022, 10264, 10665, 13149, 10334, 14059, 8702, 9193, 14978, 7953, 8815, 7732, 16876, 5950, 17329, 6784, 5544, 4662, 4134, 4900, 4263, 3871, 3586, 3543, 3706, 3239, 2987, 2847, 2677, 3541, 2350, 2846, 2345, 1867, 3156, 1883, 1335, 2634, 1216, 0, 1284, 1995, 2110, 1675, 2346])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[12607, 11480, 13127, 11368, 11769, 14254, 10481, 15164, 9807, 9341, 16082, 9057, 8912, 7879, 17980, 7055, 18434, 6881, 5698, 5775, 5239, 5043, 4814, 4869, 4670, 4825, 4388, 4431, 4270, 4130, 3960, 3676, 3451, 3164, 2906, 2968, 3253, 2383, 2436, 2732, 1340, 1284, 0, 1998, 1385, 1202, 1320])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[11759, 10632, 12279, 10520, 10921, 13405, 9250, 14316, 8959, 8110, 15234, 8209, 7418, 6738, 17103, 6206, 17397, 5014, 4565, 4927, 4390, 3914, 3933, 4021, 3822, 3981, 3540, 3583, 3572, 3298, 3184, 2561, 2640, 2262, 2025, 2304, 1331, 1535, 1905, 808, 939, 1995, 1998, 0, 1054, 3119, 3091])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[12755, 11627, 13274, 11516, 11917, 14401, 10289, 15311, 9954, 9149, 16230, 9205, 8458, 7770, 18128, 7202, 18436, 6053, 5588, 5922, 5386, 4934, 4929, 5016, 4818, 4976, 4536, 4579, 4568, 4294, 4179, 3567, 3636, 3258, 3021, 3300, 2371, 2531, 2900, 1680, 1635, 2110, 1385, 1054, 0, 2484, 2366])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[13088, 11961, 13471, 11844, 12114, 14598, 11586, 15508, 10151, 10446, 16427, 9402, 10017, 8984, 18325, 7399, 18889, 7986, 6802, 6127, 5809, 6148, 5702, 5516, 5262, 5008, 5197, 4915, 4452, 4523, 4352, 4781, 3995, 4156, 3784, 3512, 4358, 3193, 2980, 3836, 2417, 1675, 1202, 3119, 2484, 0, 866])),
+			$elm$core$Array$fromList(
+			_List_fromArray(
+				[13777, 12650, 14291, 12533, 12934, 15418, 11704, 16328, 10971, 10564, 17247, 10222, 10135, 9102, 19145, 8219, 19598, 8104, 6921, 6940, 6403, 6266, 6010, 6033, 5835, 5852, 5584, 5584, 5296, 5192, 5022, 4899, 4513, 4360, 4102, 4029, 4422, 3579, 3498, 3900, 2536, 2346, 1320, 3091, 2366, 866, 0]))
+		]));
+var $author$project$Mctrot$averageSpeedKmh = 4;
+var $author$project$Mctrot$metersPerMinute = ($author$project$Mctrot$averageSpeedKmh * 1000) / 60;
+var $elm$core$Basics$round = _Basics_round;
+var $author$project$Mctrot$travelTime = F2(
+	function (from, to) {
+		return $elm$core$Basics$round(
+			function (meters) {
+				return meters / $author$project$Mctrot$metersPerMinute;
+			}(
+				A2(
+					$elm$core$Maybe$withDefault,
+					0,
+					A2(
+						$elm$core$Maybe$andThen,
+						$elm$core$Array$get(to),
+						A2($elm$core$Array$get, from, $author$project$Mctrot$distanceMeters)))));
 	});
 var $elm$core$List$any = F2(
 	function (isOkay, list) {
@@ -6280,71 +6471,138 @@ var $elm$core$List$any = F2(
 			}
 		}
 	});
-var $elm$core$List$member = F2(
-	function (x, xs) {
-		return A2(
-			$elm$core$List$any,
-			function (a) {
-				return _Utils_eq(a, x);
-			},
-			xs);
+var $elm$core$Basics$min = F2(
+	function (x, y) {
+		return (_Utils_cmp(x, y) < 0) ? x : y;
 	});
-var $author$project$Sudoku$missingDigitsIn = F2(
-	function (positions, grid) {
-		var used = A2(
-			$elm$core$List$map,
-			function (p) {
-				return A2(
-					$elm$core$Maybe$withDefault,
-					0,
-					A2($elm$core$Array$get, p, grid));
-			},
-			positions);
-		return A2(
-			$elm$core$List$filter,
-			function (d) {
-				return !A2($elm$core$List$member, d, used);
-			},
-			A2($elm$core$List$range, 1, 9));
-	});
-var $elm$core$Tuple$pair = F2(
-	function (a, b) {
-		return _Utils_Tuple2(a, b);
-	});
-var $elm$core$List$drop = F2(
-	function (n, list) {
-		drop:
-		while (true) {
-			if (n <= 0) {
-				return list;
-			} else {
-				if (!list.b) {
-					return list;
-				} else {
-					var x = list.a;
-					var xs = list.b;
-					var $temp$n = n - 1,
-						$temp$list = xs;
-					n = $temp$n;
-					list = $temp$list;
-					continue drop;
-				}
-			}
-		}
-	});
-var $elm$core$List$head = function (list) {
+var $elm$core$List$minimum = function (list) {
 	if (list.b) {
 		var x = list.a;
 		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
+		return $elm$core$Maybe$Just(
+			A3($elm$core$List$foldl, $elm$core$Basics$min, x, xs));
 	} else {
 		return $elm$core$Maybe$Nothing;
 	}
 };
-var $elm_community$list_extra$List$Extra$getAt = F2(
-	function (idx, xs) {
-		return (idx < 0) ? $elm$core$Maybe$Nothing : $elm$core$List$head(
-			A2($elm$core$List$drop, idx, xs));
+var $author$project$Mctrot$weekMinute = F2(
+	function (startTime, arrival) {
+		return A2($elm$core$Basics$modBy, $author$project$Mctrot$weekLength, ((startTime.weekday * $author$project$Mctrot$dayLength) + startTime.minutes) + arrival);
+	});
+var $author$project$Mctrot$waitForCity = F3(
+	function (openWindows, startTime, arrival) {
+		var wm = A2($author$project$Mctrot$weekMinute, startTime, arrival);
+		var isOpenNow = A2(
+			$elm$core$List$any,
+			function (_v1) {
+				var s = _v1.a;
+				var e = _v1.b;
+				return (_Utils_cmp(wm, s) > -1) && (_Utils_cmp(wm, e) < 0);
+			},
+			openWindows);
+		return isOpenNow ? 0 : A2(
+			$elm$core$Maybe$withDefault,
+			0,
+			$elm$core$List$minimum(
+				A2(
+					$elm$core$List$map,
+					function (_v0) {
+						var s = _v0.a;
+						return A2($elm$core$Basics$modBy, $author$project$Mctrot$weekLength, s - wm);
+					},
+					openWindows)));
+	});
+var $author$project$Mctrot$simulate = F2(
+	function (startTime, tour) {
+		if (!tour.b) {
+			return _List_Nil;
+		} else {
+			var first = tour.a;
+			var rest = tour.b;
+			var visitCity = F2(
+				function (_v2, cityIndex) {
+					var prevCity = _v2.a;
+					var clock = _v2.b;
+					var visits = _v2.c;
+					var arrival = clock + A2($author$project$Mctrot$travelTime, prevCity, cityIndex);
+					var wait = A3(
+						$author$project$Mctrot$waitForCity,
+						$author$project$Mctrot$openWindowsFor(cityIndex),
+						startTime,
+						arrival - startTime.minutes);
+					var departure = arrival + wait;
+					return _Utils_Tuple3(
+						cityIndex,
+						departure,
+						A2(
+							$elm$core$List$cons,
+							{arrival: arrival, cityIndex: cityIndex, departure: departure, wait: wait},
+							visits));
+				});
+			var firstWait = A3(
+				$author$project$Mctrot$waitForCity,
+				$author$project$Mctrot$openWindowsFor(first),
+				startTime,
+				0);
+			var firstVisit = {arrival: startTime.minutes, cityIndex: first, departure: startTime.minutes + firstWait, wait: firstWait};
+			var _v1 = A3(
+				$elm$core$List$foldl,
+				F2(
+					function (c, acc) {
+						return A2(visitCity, acc, c);
+					}),
+				_Utils_Tuple3(first, firstVisit.departure, _List_Nil),
+				_Utils_ap(
+					rest,
+					_List_fromArray(
+						[$author$project$Mctrot$endIndex])));
+			var reversedVisits = _v1.c;
+			return A2(
+				$elm$core$List$cons,
+				firstVisit,
+				$elm$core$List$reverse(reversedVisits));
+		}
+	});
+var $author$project$Mctrot$totalMinutes = F2(
+	function (startTime, tour) {
+		return A2(
+			$elm$core$Maybe$withDefault,
+			0,
+			A2(
+				$elm$core$Maybe$map,
+				function (v) {
+					return v.departure - startTime.minutes;
+				},
+				$elm_community$list_extra$List$Extra$last(
+					A2($author$project$Mctrot$simulate, startTime, tour))));
+	});
+var $elm$random$Random$map2 = F3(
+	function (func, _v0, _v1) {
+		var genA = _v0.a;
+		var genB = _v1.a;
+		return $elm$random$Random$Generator(
+			function (seed0) {
+				var _v2 = genA(seed0);
+				var a = _v2.a;
+				var seed1 = _v2.b;
+				var _v3 = genB(seed1);
+				var b = _v3.a;
+				var seed2 = _v3.b;
+				return _Utils_Tuple2(
+					A2(func, a, b),
+					seed2);
+			});
+	});
+var $elm$random$Random$pair = F2(
+	function (genA, genB) {
+		return A3(
+			$elm$random$Random$map2,
+			F2(
+				function (a, b) {
+					return _Utils_Tuple2(a, b);
+				}),
+			genA,
+			genB);
 	});
 var $elm$core$List$takeReverse = F3(
 	function (n, list, kept) {
@@ -6472,283 +6730,250 @@ var $elm$core$List$take = F2(
 	function (n, list) {
 		return A3($elm$core$List$takeFast, 0, n, list);
 	});
-var $elm_community$list_extra$List$Extra$removeAt = F2(
-	function (index, l) {
-		if (index < 0) {
-			return l;
-		} else {
-			var _v0 = A2($elm$core$List$drop, index, l);
-			if (!_v0.b) {
-				return l;
+var $elm_community$list_extra$List$Extra$splitAt = F2(
+	function (n, xs) {
+		return _Utils_Tuple2(
+			A2($elm$core$List$take, n, xs),
+			A2($elm$core$List$drop, n, xs));
+	});
+var $author$project$Mctrot$twoOptNeighbor = function (tour) {
+	var n = $elm$core$List$length(tour);
+	return A2(
+		$elm$random$Random$map,
+		function (_v0) {
+			var i = _v0.a;
+			var j = _v0.b;
+			var lo = A2($elm$core$Basics$min, i, j);
+			var hi = A2($elm$core$Basics$max, i, j);
+			if (_Utils_eq(lo, hi)) {
+				return tour;
 			} else {
-				var rest = _v0.b;
+				var _v1 = A2($elm_community$list_extra$List$Extra$splitAt, lo, tour);
+				var before = _v1.a;
+				var rest = _v1.b;
+				var _v2 = A2($elm_community$list_extra$List$Extra$splitAt, (hi - lo) + 1, rest);
+				var middle = _v2.a;
+				var after = _v2.b;
 				return _Utils_ap(
-					A2($elm$core$List$take, index, l),
-					rest);
+					before,
+					_Utils_ap(
+						$elm$core$List$reverse(middle),
+						after));
 			}
-		}
-	});
-var $author$project$Sudoku$shuffle = function (list) {
-	if (!list.b) {
-		return $elm$random$Random$constant(_List_Nil);
-	} else {
-		return A2(
-			$elm$random$Random$andThen,
-			function (i) {
-				var _v1 = A2($elm_community$list_extra$List$Extra$getAt, i, list);
-				if (_v1.$ === 'Nothing') {
-					return $elm$random$Random$constant(list);
-				} else {
-					var picked = _v1.a;
-					return A2(
-						$elm$random$Random$map,
-						$elm$core$List$cons(picked),
-						$author$project$Sudoku$shuffle(
-							A2($elm_community$list_extra$List$Extra$removeAt, i, list)));
-				}
-			},
-			A2(
-				$elm$random$Random$int,
-				0,
-				$elm$core$List$length(list) - 1));
-	}
+		},
+		A2(
+			$elm$random$Random$pair,
+			A2($elm$random$Random$int, 0, n - 1),
+			A2($elm$random$Random$int, 0, n - 1)));
 };
-var $author$project$Sudoku$initialGridGenerator = A3(
-	$elm$core$List$foldl,
-	F2(
-		function (positions, genSoFar) {
-			return A2(
-				$elm$random$Random$andThen,
-				function (gridSoFar) {
-					return A2(
-						$elm$random$Random$map,
-						function (shuffled) {
-							return A3(
-								$elm$core$List$foldl,
-								F2(
-									function (_v0, g) {
-										var pos = _v0.a;
-										var v = _v0.b;
-										return A3($elm$core$Array$set, pos, v, g);
-									}),
-								gridSoFar,
-								A3(
-									$elm$core$List$map2,
-									$elm$core$Tuple$pair,
-									$author$project$Sudoku$freeCellsIn(positions),
-									shuffled));
-						},
-						$author$project$Sudoku$shuffle(
-							A2($author$project$Sudoku$missingDigitsIn, positions, gridSoFar)));
-				},
-				genSoFar);
-		}),
-	$elm$random$Random$constant($author$project$Sudoku$givenGrid),
-	$author$project$Sudoku$boxPositions);
-var $author$project$SimulatedAnnealing$iteration = function (_v0) {
-	var s = _v0.a;
-	return s.iteration;
-};
-var $author$project$Sudoku$nonFixedCount = $elm$core$List$length(
-	A2(
-		$elm$core$List$filter,
-		$elm$core$Basics$not,
-		$elm$core$Array$toList($author$project$Sudoku$isGiven)));
-var $author$project$Sudoku$markovChainLength = A2($elm$core$Basics$pow, $author$project$Sudoku$nonFixedCount, 2);
-var $author$project$Sudoku$lewisChainIndex = function (state) {
-	return ($author$project$SimulatedAnnealing$iteration(state) / $author$project$Sudoku$markovChainLength) | 0;
-};
-var $author$project$Sudoku$coolingRate = 0.99;
-var $author$project$Sudoku$lewisTemperature = F2(
-	function (t0, iteration) {
-		return t0 * A2($elm$core$Basics$pow, $author$project$Sudoku$coolingRate, (iteration / $author$project$Sudoku$markovChainLength) | 0);
-	});
-var $author$project$Sudoku$lewisConfigFor = function (t0) {
+var $author$project$Mctrot$config = function (startTime) {
 	return {
-		energy: $author$project$Sudoku$energy,
-		neighbor: $author$project$Sudoku$neighbor,
-		stoppingTemperature: 1.0e-6,
-		temperature: $author$project$Sudoku$lewisTemperature(t0)
+		energy: A2(
+			$elm$core$Basics$composeL,
+			$elm$core$Basics$toFloat,
+			$author$project$Mctrot$totalMinutes(startTime)),
+		neighbor: $author$project$Mctrot$twoOptNeighbor,
+		stoppingTemperature: 0.05,
+		temperature: $author$project$SimulatedAnnealing$Schedule$exponential(
+			{alpha: 0.9999, initial: 400})
 	};
 };
-var $author$project$Sudoku$calibrationSampleSize = 50;
-var $elm$core$Tuple$second = function (_v0) {
-	var y = _v0.b;
-	return y;
-};
-var $author$project$Sudoku$calibrationWalk = F2(
-	function (startGrid, steps) {
-		return A2(
-			$elm$random$Random$map,
-			$elm$core$Tuple$second,
-			A3(
-				$elm$core$List$foldl,
-				F2(
-					function (_v0, genSoFar) {
-						return A2(
-							$elm$random$Random$andThen,
-							function (_v1) {
-								var grid = _v1.a;
-								var costs = _v1.b;
-								return A2(
-									$elm$random$Random$map,
-									function (nextGrid) {
-										return _Utils_Tuple2(
-											nextGrid,
-											A2(
-												$elm$core$List$cons,
-												$author$project$Sudoku$energy(nextGrid),
-												costs));
-									},
-									$author$project$Sudoku$neighbor(grid));
-							},
-							genSoFar);
-					}),
-				$elm$random$Random$constant(
-					_Utils_Tuple2(
-						startGrid,
-						_List_fromArray(
-							[
-								$author$project$Sudoku$energy(startGrid)
-							]))),
-				A2($elm$core$List$range, 1, steps)));
+var $author$project$SimulatedAnnealing$isDone = F2(
+	function (config, _v0) {
+		var s = _v0.a;
+		return _Utils_cmp(
+			config.temperature(s.iteration),
+			config.stoppingTemperature) < 1;
 	});
-var $elm$core$Basics$sqrt = _Basics_sqrt;
-var $author$project$Sudoku$stdDev = function (values) {
-	var n = $elm$core$List$length(values);
-	var mean = $elm$core$List$sum(values) / n;
-	return $elm$core$Basics$sqrt(
-		$elm$core$List$sum(
-			A2(
-				$elm$core$List$map,
-				function (v) {
-					return A2($elm$core$Basics$pow, v - mean, 2);
-				},
-				values)) / n);
+var $elm$core$Platform$Sub$batch = _Platform_batch;
+var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
+var $elm$core$Basics$not = _Basics_not;
+var $elm$browser$Browser$AnimationManager$Time = function (a) {
+	return {$: 'Time', a: a};
 };
-var $author$project$Sudoku$lewisSetupGenerator = A2(
-	$elm$random$Random$andThen,
-	function (grid) {
-		return A2(
-			$elm$random$Random$map,
-			function (costs) {
-				return _Utils_Tuple2(
-					grid,
-					$author$project$Sudoku$stdDev(costs));
-			},
-			A2($author$project$Sudoku$calibrationWalk, grid, $author$project$Sudoku$calibrationSampleSize));
-	},
-	$author$project$Sudoku$initialGridGenerator);
-var $author$project$Sudoku$lewisStepsPerFrame = 600;
-var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
-var $author$project$Sudoku$reheatPatience = 20;
-var $elm_community$list_extra$List$Extra$find = F2(
-	function (predicate, list) {
-		find:
-		while (true) {
-			if (!list.b) {
-				return $elm$core$Maybe$Nothing;
+var $elm$browser$Browser$AnimationManager$State = F3(
+	function (subs, request, oldTime) {
+		return {oldTime: oldTime, request: request, subs: subs};
+	});
+var $elm$browser$Browser$AnimationManager$init = $elm$core$Task$succeed(
+	A3($elm$browser$Browser$AnimationManager$State, _List_Nil, $elm$core$Maybe$Nothing, 0));
+var $elm$core$Process$kill = _Scheduler_kill;
+var $elm$browser$Browser$AnimationManager$now = _Browser_now(_Utils_Tuple0);
+var $elm$browser$Browser$AnimationManager$rAF = _Browser_rAF(_Utils_Tuple0);
+var $elm$core$Platform$sendToSelf = _Platform_sendToSelf;
+var $elm$core$Process$spawn = _Scheduler_spawn;
+var $elm$browser$Browser$AnimationManager$onEffects = F3(
+	function (router, subs, _v0) {
+		var oldTime = _v0.oldTime;
+		var request = _v0.request;
+		var _v1 = _Utils_Tuple2(request, subs);
+		if (_v1.a.$ === 'Nothing') {
+			if (!_v1.b.b) {
+				var _v2 = _v1.a;
+				return $elm$browser$Browser$AnimationManager$init;
 			} else {
-				var first = list.a;
-				var rest = list.b;
-				if (predicate(first)) {
-					return $elm$core$Maybe$Just(first);
-				} else {
-					var $temp$predicate = predicate,
-						$temp$list = rest;
-					predicate = $temp$predicate;
-					list = $temp$list;
-					continue find;
-				}
-			}
-		}
-	});
-var $author$project$Sudoku$boxValues = F3(
-	function (r, c, grid) {
-		return A2(
-			$elm$core$List$map,
-			function (p) {
+				var _v4 = _v1.a;
 				return A2(
-					$elm$core$Maybe$withDefault,
-					0,
-					A2($elm$core$Array$get, p, grid));
-			},
-			A2(
-				$elm$core$Maybe$withDefault,
-				_List_Nil,
-				A2(
-					$elm_community$list_extra$List$Extra$find,
-					$elm$core$List$member((r * 9) + c),
-					$author$project$Sudoku$boxPositions)));
-	});
-var $author$project$Sudoku$candidatesFor = F3(
-	function (r, c, grid) {
-		var used = _Utils_ap(
-			A2($author$project$Sudoku$rowValues, r, grid),
-			_Utils_ap(
-				A2($author$project$Sudoku$colValues, c, grid),
-				A3($author$project$Sudoku$boxValues, r, c, grid)));
-		return A2(
-			$elm$core$List$filter,
-			function (v) {
-				return !A2($elm$core$List$member, v, used);
-			},
-			A2($elm$core$List$range, 1, 9));
-	});
-var $elm_community$list_extra$List$Extra$findMap = F2(
-	function (f, list) {
-		findMap:
-		while (true) {
-			if (!list.b) {
-				return $elm$core$Maybe$Nothing;
+					$elm$core$Task$andThen,
+					function (pid) {
+						return A2(
+							$elm$core$Task$andThen,
+							function (time) {
+								return $elm$core$Task$succeed(
+									A3(
+										$elm$browser$Browser$AnimationManager$State,
+										subs,
+										$elm$core$Maybe$Just(pid),
+										time));
+							},
+							$elm$browser$Browser$AnimationManager$now);
+					},
+					$elm$core$Process$spawn(
+						A2(
+							$elm$core$Task$andThen,
+							$elm$core$Platform$sendToSelf(router),
+							$elm$browser$Browser$AnimationManager$rAF)));
+			}
+		} else {
+			if (!_v1.b.b) {
+				var pid = _v1.a.a;
+				return A2(
+					$elm$core$Task$andThen,
+					function (_v3) {
+						return $elm$browser$Browser$AnimationManager$init;
+					},
+					$elm$core$Process$kill(pid));
 			} else {
-				var a = list.a;
-				var tail = list.b;
-				var _v1 = f(a);
-				if (_v1.$ === 'Just') {
-					var b = _v1.a;
-					return $elm$core$Maybe$Just(b);
-				} else {
-					var $temp$f = f,
-						$temp$list = tail;
-					f = $temp$f;
-					list = $temp$list;
-					continue findMap;
-				}
+				return $elm$core$Task$succeed(
+					A3($elm$browser$Browser$AnimationManager$State, subs, request, oldTime));
 			}
 		}
 	});
-var $author$project$Sudoku$firstEmptyCell = function (grid) {
-	return A2(
-		$elm_community$list_extra$List$Extra$find,
-		function (pos) {
-			return _Utils_eq(
-				A2($elm$core$Array$get, pos, grid),
-				$elm$core$Maybe$Just(0));
-		},
-		A2($elm$core$List$range, 0, 80));
-};
-var $elm$core$Basics$modBy = _Basics_modBy;
-var $author$project$Sudoku$solveByBacktracking = function (grid) {
-	var _v0 = $author$project$Sudoku$firstEmptyCell(grid);
-	if (_v0.$ === 'Nothing') {
-		return $elm$core$Maybe$Just(grid);
-	} else {
-		var pos = _v0.a;
+var $elm$browser$Browser$AnimationManager$onSelfMsg = F3(
+	function (router, newTime, _v0) {
+		var oldTime = _v0.oldTime;
+		var subs = _v0.subs;
+		var send = function (sub) {
+			if (sub.$ === 'Time') {
+				var tagger = sub.a;
+				return A2(
+					$elm$core$Platform$sendToApp,
+					router,
+					tagger(
+						$elm$time$Time$millisToPosix(newTime)));
+			} else {
+				var tagger = sub.a;
+				return A2(
+					$elm$core$Platform$sendToApp,
+					router,
+					tagger(newTime - oldTime));
+			}
+		};
 		return A2(
-			$elm_community$list_extra$List$Extra$findMap,
-			function (v) {
-				return $author$project$Sudoku$solveByBacktracking(
-					A3($elm$core$Array$set, pos, v, grid));
+			$elm$core$Task$andThen,
+			function (pid) {
+				return A2(
+					$elm$core$Task$andThen,
+					function (_v1) {
+						return $elm$core$Task$succeed(
+							A3(
+								$elm$browser$Browser$AnimationManager$State,
+								subs,
+								$elm$core$Maybe$Just(pid),
+								newTime));
+					},
+					$elm$core$Task$sequence(
+						A2($elm$core$List$map, send, subs)));
 			},
-			A3(
-				$author$project$Sudoku$candidatesFor,
-				(pos / 9) | 0,
-				A2($elm$core$Basics$modBy, 9, pos),
-				grid));
+			$elm$core$Process$spawn(
+				A2(
+					$elm$core$Task$andThen,
+					$elm$core$Platform$sendToSelf(router),
+					$elm$browser$Browser$AnimationManager$rAF)));
+	});
+var $elm$browser$Browser$AnimationManager$Delta = function (a) {
+	return {$: 'Delta', a: a};
+};
+var $elm$browser$Browser$AnimationManager$subMap = F2(
+	function (func, sub) {
+		if (sub.$ === 'Time') {
+			var tagger = sub.a;
+			return $elm$browser$Browser$AnimationManager$Time(
+				A2($elm$core$Basics$composeL, func, tagger));
+		} else {
+			var tagger = sub.a;
+			return $elm$browser$Browser$AnimationManager$Delta(
+				A2($elm$core$Basics$composeL, func, tagger));
+		}
+	});
+_Platform_effectManagers['Browser.AnimationManager'] = _Platform_createManager($elm$browser$Browser$AnimationManager$init, $elm$browser$Browser$AnimationManager$onEffects, $elm$browser$Browser$AnimationManager$onSelfMsg, 0, $elm$browser$Browser$AnimationManager$subMap);
+var $elm$browser$Browser$AnimationManager$subscription = _Platform_leaf('Browser.AnimationManager');
+var $elm$browser$Browser$AnimationManager$onAnimationFrame = function (tagger) {
+	return $elm$browser$Browser$AnimationManager$subscription(
+		$elm$browser$Browser$AnimationManager$Time(tagger));
+};
+var $elm$browser$Browser$Events$onAnimationFrame = $elm$browser$Browser$AnimationManager$onAnimationFrame;
+var $author$project$Mctrot$subscriptions = function (model) {
+	var _v0 = model.saState;
+	if (_v0.$ === 'Just') {
+		var state = _v0.a;
+		return (model.running && (!A2(
+			$author$project$SimulatedAnnealing$isDone,
+			$author$project$Mctrot$config(model.activeStart),
+			state))) ? $elm$browser$Browser$Events$onAnimationFrame(
+			function (_v1) {
+				return $author$project$Mctrot$Tick;
+			}) : $elm$core$Platform$Sub$none;
+	} else {
+		return $elm$core$Platform$Sub$none;
 	}
 };
+var $author$project$SimulatedAnnealing$State = function (a) {
+	return {$: 'State', a: a};
+};
+var $author$project$SimulatedAnnealing$init = F3(
+	function (config, seed, initial) {
+		var e = config.energy(initial);
+		return $author$project$SimulatedAnnealing$State(
+			{best: initial, bestEnergy: e, current: initial, currentEnergy: e, iteration: 0, seed: seed});
+	});
+var $elm$core$Array$length = function (_v0) {
+	var len = _v0.a;
+	return len;
+};
+var $elm$core$Basics$neq = _Utils_notEqual;
+var $author$project$Mctrot$initialTour = A2(
+	$elm$core$List$filter,
+	function (i) {
+		return !_Utils_eq(i, $author$project$Mctrot$endIndex);
+	},
+	A2(
+		$elm$core$List$range,
+		0,
+		$elm$core$Array$length($author$project$Mctrot$cities) - 1));
+var $elm$core$Platform$Cmd$batch = _Platform_batch;
+var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$SimulatedAnnealing$eulersNumber = 2.718281828459045;
+var $elm$core$Basics$abs = function (n) {
+	return (n < 0) ? (-n) : n;
+};
+var $elm$random$Random$float = F2(
+	function (a, b) {
+		return $elm$random$Random$Generator(
+			function (seed0) {
+				var seed1 = $elm$random$Random$next(seed0);
+				var range = $elm$core$Basics$abs(b - a);
+				var n1 = $elm$random$Random$peel(seed1);
+				var n0 = $elm$random$Random$peel(seed0);
+				var lo = (134217727 & n1) * 1.0;
+				var hi = (67108863 & n0) * 1.0;
+				var val = ((hi * 134217728.0) + lo) / 9007199254740992.0;
+				var scaled = (val * range) + a;
+				return _Utils_Tuple2(
+					scaled,
+					$elm$random$Random$next(seed1));
+			});
+	});
 var $author$project$SimulatedAnnealing$step = F2(
 	function (config, _v0) {
 		var s = _v0.a;
@@ -6796,38 +7021,54 @@ var $author$project$SimulatedAnnealing$stepN = F3(
 			}
 		}
 	});
-var $author$project$Sudoku$update = F2(
+var $author$project$Mctrot$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
 			case 'GotSeed':
 				var seed = msg.a;
-				var _v1 = A2($elm$random$Random$step, $author$project$Sudoku$initialGridGenerator, seed);
-				var startingGrid = _v1.a;
-				var searchSeed = _v1.b;
+				var activeStart = {
+					minutes: $author$project$Mctrot$parseStartMinutes(model.startTimeOfDay),
+					weekday: $author$project$Mctrot$mondayIndexedWeekday(model.startDate)
+				};
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{
-							running: true,
+							activeStart: activeStart,
+							running: false,
 							saState: $elm$core$Maybe$Just(
-								A3($author$project$SimulatedAnnealing$init, $author$project$Sudoku$config, searchSeed, startingGrid))
+								A3(
+									$author$project$SimulatedAnnealing$init,
+									$author$project$Mctrot$config(activeStart),
+									seed,
+									$author$project$Mctrot$initialTour))
 						}),
 					$elm$core$Platform$Cmd$none);
 			case 'Tick':
-				var _v2 = model.saState;
-				if (_v2.$ === 'Nothing') {
+				var _v1 = model.saState;
+				if (_v1.$ === 'Nothing') {
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				} else {
-					var state = _v2.a;
+					var state = _v1.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
 								saState: $elm$core$Maybe$Just(
-									A3($author$project$SimulatedAnnealing$stepN, $author$project$Sudoku$config, model.stepsPerFrame, state))
+									A3(
+										$author$project$SimulatedAnnealing$stepN,
+										$author$project$Mctrot$config(model.activeStart),
+										model.stepsPerFrame,
+										state))
 							}),
 						$elm$core$Platform$Cmd$none);
 				}
+			case 'Start':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{running: true, started: true}),
+					$elm$core$Platform$Cmd$none);
 			case 'ToggleRunning':
 				return _Utils_Tuple2(
 					_Utils_update(
@@ -6838,578 +7079,42 @@ var $author$project$Sudoku$update = F2(
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{saState: $elm$core$Maybe$Nothing}),
-					A2($elm$random$Random$generate, $author$project$Sudoku$GotSeed, $elm$random$Random$independentSeed));
-			case 'RunBacktracking':
+						{running: false, saState: $elm$core$Maybe$Nothing, started: false}),
+					A2($elm$random$Random$generate, $author$project$Mctrot$GotSeed, $elm$random$Random$independentSeed));
+			case 'SetStartDate':
+				var date = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{
-							deterministicSolution: $elm$core$Maybe$Just(
-								$author$project$Sudoku$solveByBacktracking($author$project$Sudoku$givenGrid))
-						}),
-					$elm$core$Platform$Cmd$none);
-			case 'GotLewisSeed':
-				var seed = msg.a;
-				var _v3 = A2($elm$random$Random$step, $author$project$Sudoku$lewisSetupGenerator, seed);
-				var _v4 = _v3.a;
-				var startingGrid = _v4.a;
-				var t0 = _v4.b;
-				var searchSeed = _v3.b;
-				var lewisConfig = $author$project$Sudoku$lewisConfigFor(t0);
-				var state = A3($author$project$SimulatedAnnealing$init, lewisConfig, searchSeed, startingGrid);
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							lewis: $elm$core$Maybe$Just(
-								{bestChainIndex: 0, config: lewisConfig, reheatCount: 0, state: state}),
-							lewisRunning: true
-						}),
-					$elm$core$Platform$Cmd$none);
-			case 'LewisTick':
-				var _v5 = model.lewis;
-				if (_v5.$ === 'Nothing') {
-					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-				} else {
-					var run = _v5.a;
-					var steppedState = A3($author$project$SimulatedAnnealing$stepN, run.config, $author$project$Sudoku$lewisStepsPerFrame, run.state);
-					var improved = _Utils_cmp(
-						$author$project$SimulatedAnnealing$bestEnergy(steppedState),
-						$author$project$SimulatedAnnealing$bestEnergy(run.state)) < 0;
-					var updatedRun = improved ? _Utils_update(
-						run,
-						{
-							bestChainIndex: $author$project$Sudoku$lewisChainIndex(steppedState),
-							state: steppedState
-						}) : _Utils_update(
-						run,
-						{state: steppedState});
-					var stagnantChains = $author$project$Sudoku$lewisChainIndex(steppedState) - updatedRun.bestChainIndex;
-					var alreadySolved = !$author$project$SimulatedAnnealing$bestEnergy(steppedState);
-					return ((!alreadySolved) && (_Utils_cmp(stagnantChains, $author$project$Sudoku$reheatPatience) > -1)) ? _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								lewis: $elm$core$Maybe$Just(updatedRun)
-							}),
-						A2($elm$random$Random$generate, $author$project$Sudoku$GotReheatSeed, $elm$random$Random$independentSeed)) : _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								lewis: $elm$core$Maybe$Just(updatedRun)
-							}),
-						$elm$core$Platform$Cmd$none);
-				}
-			case 'GotReheatSeed':
-				var seed = msg.a;
-				var _v6 = model.lewis;
-				if (_v6.$ === 'Nothing') {
-					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-				} else {
-					var run = _v6.a;
-					var _v7 = A2($elm$random$Random$step, $author$project$Sudoku$initialGridGenerator, seed);
-					var startingGrid = _v7.a;
-					var searchSeed = _v7.b;
-					var freshState = A3($author$project$SimulatedAnnealing$init, run.config, searchSeed, startingGrid);
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								lewis: $elm$core$Maybe$Just(
-									_Utils_update(
-										run,
-										{bestChainIndex: 0, reheatCount: run.reheatCount + 1, state: freshState}))
-							}),
-						$elm$core$Platform$Cmd$none);
-				}
-			case 'LewisToggleRunning':
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{lewisRunning: !model.lewisRunning}),
+						{startDate: date}),
 					$elm$core$Platform$Cmd$none);
 			default:
+				var timeOfDay = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{lewis: $elm$core$Maybe$Nothing}),
-					A2($elm$random$Random$generate, $author$project$Sudoku$GotLewisSeed, $elm$random$Random$independentSeed));
+						{startTimeOfDay: timeOfDay}),
+					$elm$core$Platform$Cmd$none);
 		}
 	});
-var $elm$html$Html$div = _VirtualDom_node('div');
-var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
-var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
-var $author$project$Sudoku$Restart = {$: 'Restart'};
-var $author$project$Sudoku$ToggleRunning = {$: 'ToggleRunning'};
-var $author$project$Sudoku$cellSize = 42;
-var $author$project$Sudoku$boardSize = $author$project$Sudoku$cellSize * 9;
+var $author$project$Mctrot$Restart = {$: 'Restart'};
+var $author$project$Mctrot$Start = {$: 'Start'};
+var $author$project$Mctrot$ToggleRunning = {$: 'ToggleRunning'};
+var $author$project$SimulatedAnnealing$bestEnergy = function (_v0) {
+	var s = _v0.a;
+	return s.bestEnergy;
+};
 var $elm$html$Html$button = _VirtualDom_node('button');
-var $elm$core$Dict$get = F2(
-	function (targetKey, dict) {
-		get:
-		while (true) {
-			if (dict.$ === 'RBEmpty_elm_builtin') {
-				return $elm$core$Maybe$Nothing;
-			} else {
-				var key = dict.b;
-				var value = dict.c;
-				var left = dict.d;
-				var right = dict.e;
-				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
-				switch (_v1.$) {
-					case 'LT':
-						var $temp$targetKey = targetKey,
-							$temp$dict = left;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-					case 'EQ':
-						return $elm$core$Maybe$Just(value);
-					default:
-						var $temp$targetKey = targetKey,
-							$temp$dict = right;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-				}
-			}
+var $elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
+		} else {
+			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
 		}
 	});
-var $elm$core$Dict$getMin = function (dict) {
-	getMin:
-	while (true) {
-		if ((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) {
-			var left = dict.d;
-			var $temp$dict = left;
-			dict = $temp$dict;
-			continue getMin;
-		} else {
-			return dict;
-		}
-	}
-};
-var $elm$core$Dict$moveRedLeft = function (dict) {
-	if (((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) && (dict.e.$ === 'RBNode_elm_builtin')) {
-		if ((dict.e.d.$ === 'RBNode_elm_builtin') && (dict.e.d.a.$ === 'Red')) {
-			var clr = dict.a;
-			var k = dict.b;
-			var v = dict.c;
-			var _v1 = dict.d;
-			var lClr = _v1.a;
-			var lK = _v1.b;
-			var lV = _v1.c;
-			var lLeft = _v1.d;
-			var lRight = _v1.e;
-			var _v2 = dict.e;
-			var rClr = _v2.a;
-			var rK = _v2.b;
-			var rV = _v2.c;
-			var rLeft = _v2.d;
-			var _v3 = rLeft.a;
-			var rlK = rLeft.b;
-			var rlV = rLeft.c;
-			var rlL = rLeft.d;
-			var rlR = rLeft.e;
-			var rRight = _v2.e;
-			return A5(
-				$elm$core$Dict$RBNode_elm_builtin,
-				$elm$core$Dict$Red,
-				rlK,
-				rlV,
-				A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Black,
-					k,
-					v,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
-					rlL),
-				A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, rK, rV, rlR, rRight));
-		} else {
-			var clr = dict.a;
-			var k = dict.b;
-			var v = dict.c;
-			var _v4 = dict.d;
-			var lClr = _v4.a;
-			var lK = _v4.b;
-			var lV = _v4.c;
-			var lLeft = _v4.d;
-			var lRight = _v4.e;
-			var _v5 = dict.e;
-			var rClr = _v5.a;
-			var rK = _v5.b;
-			var rV = _v5.c;
-			var rLeft = _v5.d;
-			var rRight = _v5.e;
-			if (clr.$ === 'Black') {
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Black,
-					k,
-					v,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
-			} else {
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Black,
-					k,
-					v,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
-			}
-		}
-	} else {
-		return dict;
-	}
-};
-var $elm$core$Dict$moveRedRight = function (dict) {
-	if (((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) && (dict.e.$ === 'RBNode_elm_builtin')) {
-		if ((dict.d.d.$ === 'RBNode_elm_builtin') && (dict.d.d.a.$ === 'Red')) {
-			var clr = dict.a;
-			var k = dict.b;
-			var v = dict.c;
-			var _v1 = dict.d;
-			var lClr = _v1.a;
-			var lK = _v1.b;
-			var lV = _v1.c;
-			var _v2 = _v1.d;
-			var _v3 = _v2.a;
-			var llK = _v2.b;
-			var llV = _v2.c;
-			var llLeft = _v2.d;
-			var llRight = _v2.e;
-			var lRight = _v1.e;
-			var _v4 = dict.e;
-			var rClr = _v4.a;
-			var rK = _v4.b;
-			var rV = _v4.c;
-			var rLeft = _v4.d;
-			var rRight = _v4.e;
-			return A5(
-				$elm$core$Dict$RBNode_elm_builtin,
-				$elm$core$Dict$Red,
-				lK,
-				lV,
-				A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, llK, llV, llLeft, llRight),
-				A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Black,
-					k,
-					v,
-					lRight,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight)));
-		} else {
-			var clr = dict.a;
-			var k = dict.b;
-			var v = dict.c;
-			var _v5 = dict.d;
-			var lClr = _v5.a;
-			var lK = _v5.b;
-			var lV = _v5.c;
-			var lLeft = _v5.d;
-			var lRight = _v5.e;
-			var _v6 = dict.e;
-			var rClr = _v6.a;
-			var rK = _v6.b;
-			var rV = _v6.c;
-			var rLeft = _v6.d;
-			var rRight = _v6.e;
-			if (clr.$ === 'Black') {
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Black,
-					k,
-					v,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
-			} else {
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Black,
-					k,
-					v,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
-			}
-		}
-	} else {
-		return dict;
-	}
-};
-var $elm$core$Dict$removeHelpPrepEQGT = F7(
-	function (targetKey, dict, color, key, value, left, right) {
-		if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) {
-			var _v1 = left.a;
-			var lK = left.b;
-			var lV = left.c;
-			var lLeft = left.d;
-			var lRight = left.e;
-			return A5(
-				$elm$core$Dict$RBNode_elm_builtin,
-				color,
-				lK,
-				lV,
-				lLeft,
-				A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, lRight, right));
-		} else {
-			_v2$2:
-			while (true) {
-				if ((right.$ === 'RBNode_elm_builtin') && (right.a.$ === 'Black')) {
-					if (right.d.$ === 'RBNode_elm_builtin') {
-						if (right.d.a.$ === 'Black') {
-							var _v3 = right.a;
-							var _v4 = right.d;
-							var _v5 = _v4.a;
-							return $elm$core$Dict$moveRedRight(dict);
-						} else {
-							break _v2$2;
-						}
-					} else {
-						var _v6 = right.a;
-						var _v7 = right.d;
-						return $elm$core$Dict$moveRedRight(dict);
-					}
-				} else {
-					break _v2$2;
-				}
-			}
-			return dict;
-		}
-	});
-var $elm$core$Dict$removeMin = function (dict) {
-	if ((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) {
-		var color = dict.a;
-		var key = dict.b;
-		var value = dict.c;
-		var left = dict.d;
-		var lColor = left.a;
-		var lLeft = left.d;
-		var right = dict.e;
-		if (lColor.$ === 'Black') {
-			if ((lLeft.$ === 'RBNode_elm_builtin') && (lLeft.a.$ === 'Red')) {
-				var _v3 = lLeft.a;
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					color,
-					key,
-					value,
-					$elm$core$Dict$removeMin(left),
-					right);
-			} else {
-				var _v4 = $elm$core$Dict$moveRedLeft(dict);
-				if (_v4.$ === 'RBNode_elm_builtin') {
-					var nColor = _v4.a;
-					var nKey = _v4.b;
-					var nValue = _v4.c;
-					var nLeft = _v4.d;
-					var nRight = _v4.e;
-					return A5(
-						$elm$core$Dict$balance,
-						nColor,
-						nKey,
-						nValue,
-						$elm$core$Dict$removeMin(nLeft),
-						nRight);
-				} else {
-					return $elm$core$Dict$RBEmpty_elm_builtin;
-				}
-			}
-		} else {
-			return A5(
-				$elm$core$Dict$RBNode_elm_builtin,
-				color,
-				key,
-				value,
-				$elm$core$Dict$removeMin(left),
-				right);
-		}
-	} else {
-		return $elm$core$Dict$RBEmpty_elm_builtin;
-	}
-};
-var $elm$core$Dict$removeHelp = F2(
-	function (targetKey, dict) {
-		if (dict.$ === 'RBEmpty_elm_builtin') {
-			return $elm$core$Dict$RBEmpty_elm_builtin;
-		} else {
-			var color = dict.a;
-			var key = dict.b;
-			var value = dict.c;
-			var left = dict.d;
-			var right = dict.e;
-			if (_Utils_cmp(targetKey, key) < 0) {
-				if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Black')) {
-					var _v4 = left.a;
-					var lLeft = left.d;
-					if ((lLeft.$ === 'RBNode_elm_builtin') && (lLeft.a.$ === 'Red')) {
-						var _v6 = lLeft.a;
-						return A5(
-							$elm$core$Dict$RBNode_elm_builtin,
-							color,
-							key,
-							value,
-							A2($elm$core$Dict$removeHelp, targetKey, left),
-							right);
-					} else {
-						var _v7 = $elm$core$Dict$moveRedLeft(dict);
-						if (_v7.$ === 'RBNode_elm_builtin') {
-							var nColor = _v7.a;
-							var nKey = _v7.b;
-							var nValue = _v7.c;
-							var nLeft = _v7.d;
-							var nRight = _v7.e;
-							return A5(
-								$elm$core$Dict$balance,
-								nColor,
-								nKey,
-								nValue,
-								A2($elm$core$Dict$removeHelp, targetKey, nLeft),
-								nRight);
-						} else {
-							return $elm$core$Dict$RBEmpty_elm_builtin;
-						}
-					}
-				} else {
-					return A5(
-						$elm$core$Dict$RBNode_elm_builtin,
-						color,
-						key,
-						value,
-						A2($elm$core$Dict$removeHelp, targetKey, left),
-						right);
-				}
-			} else {
-				return A2(
-					$elm$core$Dict$removeHelpEQGT,
-					targetKey,
-					A7($elm$core$Dict$removeHelpPrepEQGT, targetKey, dict, color, key, value, left, right));
-			}
-		}
-	});
-var $elm$core$Dict$removeHelpEQGT = F2(
-	function (targetKey, dict) {
-		if (dict.$ === 'RBNode_elm_builtin') {
-			var color = dict.a;
-			var key = dict.b;
-			var value = dict.c;
-			var left = dict.d;
-			var right = dict.e;
-			if (_Utils_eq(targetKey, key)) {
-				var _v1 = $elm$core$Dict$getMin(right);
-				if (_v1.$ === 'RBNode_elm_builtin') {
-					var minKey = _v1.b;
-					var minValue = _v1.c;
-					return A5(
-						$elm$core$Dict$balance,
-						color,
-						minKey,
-						minValue,
-						left,
-						$elm$core$Dict$removeMin(right));
-				} else {
-					return $elm$core$Dict$RBEmpty_elm_builtin;
-				}
-			} else {
-				return A5(
-					$elm$core$Dict$balance,
-					color,
-					key,
-					value,
-					left,
-					A2($elm$core$Dict$removeHelp, targetKey, right));
-			}
-		} else {
-			return $elm$core$Dict$RBEmpty_elm_builtin;
-		}
-	});
-var $elm$core$Dict$remove = F2(
-	function (key, dict) {
-		var _v0 = A2($elm$core$Dict$removeHelp, key, dict);
-		if ((_v0.$ === 'RBNode_elm_builtin') && (_v0.a.$ === 'Red')) {
-			var _v1 = _v0.a;
-			var k = _v0.b;
-			var v = _v0.c;
-			var l = _v0.d;
-			var r = _v0.e;
-			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, k, v, l, r);
-		} else {
-			var x = _v0;
-			return x;
-		}
-	});
-var $elm$core$Dict$update = F3(
-	function (targetKey, alter, dictionary) {
-		var _v0 = alter(
-			A2($elm$core$Dict$get, targetKey, dictionary));
-		if (_v0.$ === 'Just') {
-			var value = _v0.a;
-			return A3($elm$core$Dict$insert, targetKey, value, dictionary);
-		} else {
-			return A2($elm$core$Dict$remove, targetKey, dictionary);
-		}
-	});
-var $author$project$Sudoku$duplicatePositions = function (cellsWithValues) {
-	var counts = A3(
-		$elm$core$List$foldl,
-		F2(
-			function (v, d) {
-				return A3(
-					$elm$core$Dict$update,
-					v,
-					function (mc) {
-						return $elm$core$Maybe$Just(
-							A2($elm$core$Maybe$withDefault, 0, mc) + 1);
-					},
-					d);
-			}),
-		$elm$core$Dict$empty,
-		A2($elm$core$List$map, $elm$core$Tuple$second, cellsWithValues));
-	return A2(
-		$elm$core$List$map,
-		$elm$core$Tuple$first,
-		A2(
-			$elm$core$List$filter,
-			function (_v0) {
-				var v = _v0.b;
-				return A2(
-					$elm$core$Maybe$withDefault,
-					0,
-					A2($elm$core$Dict$get, v, counts)) > 1;
-			},
-			cellsWithValues));
-};
-var $author$project$Sudoku$conflictingPositions = function (grid) {
-	var rows = A2(
-		$elm$core$List$concatMap,
-		function (r) {
-			return $author$project$Sudoku$duplicatePositions(
-				A2(
-					$elm$core$List$map,
-					function (c) {
-						return _Utils_Tuple2(
-							(r * 9) + c,
-							A3($author$project$Sudoku$cellAt, r, c, grid));
-					},
-					A2($elm$core$List$range, 0, 8)));
-		},
-		A2($elm$core$List$range, 0, 8));
-	var cols = A2(
-		$elm$core$List$concatMap,
-		function (c) {
-			return $author$project$Sudoku$duplicatePositions(
-				A2(
-					$elm$core$List$map,
-					function (r) {
-						return _Utils_Tuple2(
-							(r * 9) + c,
-							A3($author$project$Sudoku$cellAt, r, c, grid));
-					},
-					A2($elm$core$List$range, 0, 8)));
-		},
-		A2($elm$core$List$range, 0, 8));
-	return $elm$core$Set$fromList(
-		_Utils_ap(rows, cols));
+var $elm$core$List$concat = function (lists) {
+	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
 };
 var $author$project$SimulatedAnnealing$current = function (_v0) {
 	var s = _v0.a;
@@ -7419,6 +7124,7 @@ var $author$project$SimulatedAnnealing$currentEnergy = function (_v0) {
 	var s = _v0.a;
 	return s.currentEnergy;
 };
+var $elm$html$Html$details = _VirtualDom_node('details');
 var $elm$json$Json$Encode$bool = _Json_wrap;
 var $elm$html$Html$Attributes$boolProperty = F2(
 	function (key, bool) {
@@ -7428,9 +7134,17 @@ var $elm$html$Html$Attributes$boolProperty = F2(
 			$elm$json$Json$Encode$bool(bool));
 	});
 var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
+var $elm$html$Html$div = _VirtualDom_node('div');
+var $author$project$Mctrot$formatDuration = function (minutes) {
+	return $elm$core$String$fromInt((minutes / 60) | 0) + ('h ' + ($elm$core$String$fromInt(
+		A2($elm$core$Basics$modBy, 60, minutes)) + 'm'));
+};
 var $elm$core$String$fromFloat = _String_fromNumber;
-var $elm$html$Html$h3 = _VirtualDom_node('h3');
 var $elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
+var $author$project$SimulatedAnnealing$iteration = function (_v0) {
+	var s = _v0.a;
+	return s.iteration;
+};
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -7449,9 +7163,11 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		$elm$json$Json$Decode$succeed(msg));
 };
 var $elm$html$Html$p = _VirtualDom_node('p');
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
-var $author$project$Sudoku$readout = F2(
+var $author$project$Mctrot$readout = F2(
 	function (label, value) {
 		return A2(
 			$elm$html$Html$div,
@@ -7481,12 +7197,8 @@ var $author$project$Sudoku$readout = F2(
 						]))
 				]));
 	});
-var $elm$core$Basics$round = _Basics_round;
-var $author$project$Sudoku$roundTo = F2(
-	function (decimals, value) {
-		var factor = A2($elm$core$Basics$pow, 10, decimals);
-		return $elm$core$Basics$round(value * factor) / factor;
-	});
+var $author$project$Mctrot$rowHeight = 34;
+var $elm$html$Html$summary = _VirtualDom_node('summary');
 var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
 var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
 var $author$project$SimulatedAnnealing$temperature = F2(
@@ -7494,605 +7206,605 @@ var $author$project$SimulatedAnnealing$temperature = F2(
 		var s = _v0.a;
 		return config.temperature(s.iteration);
 	});
-var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
-var $elm$svg$Svg$Attributes$fontSize = _VirtualDom_attribute('font-size');
-var $elm$svg$Svg$Attributes$fontWeight = _VirtualDom_attribute('font-weight');
-var $elm$core$Dict$member = F2(
-	function (key, dict) {
-		var _v0 = A2($elm$core$Dict$get, key, dict);
+var $author$project$Mctrot$timelineWidth = 760;
+var $author$project$Mctrot$matrixCell = _List_fromArray(
+	[
+		A2($elm$html$Html$Attributes$style, 'border', '1px solid #ddd'),
+		A2($elm$html$Html$Attributes$style, 'padding', '2px 6px'),
+		A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+	]);
+var $elm$html$Html$table = _VirtualDom_node('table');
+var $elm$html$Html$td = _VirtualDom_node('td');
+var $elm$html$Html$th = _VirtualDom_node('th');
+var $elm$html$Html$tr = _VirtualDom_node('tr');
+var $author$project$Mctrot$viewCostMatrix = function () {
+	var cityList = $elm$core$Array$toList($author$project$Mctrot$cities);
+	var headerRow = A2(
+		$elm$html$Html$tr,
+		_List_Nil,
+		A2(
+			$elm$core$List$cons,
+			A2($elm$html$Html$th, $author$project$Mctrot$matrixCell, _List_Nil),
+			A2(
+				$elm$core$List$map,
+				function (c) {
+					return A2(
+						$elm$html$Html$th,
+						$author$project$Mctrot$matrixCell,
+						_List_fromArray(
+							[
+								$elm$html$Html$text(c.name)
+							]));
+				},
+				cityList)));
+	var bodyRow = F2(
+		function (i, city) {
+			return A2(
+				$elm$html$Html$tr,
+				_List_Nil,
+				A2(
+					$elm$core$List$cons,
+					A2(
+						$elm$html$Html$th,
+						$author$project$Mctrot$matrixCell,
+						_List_fromArray(
+							[
+								$elm$html$Html$text(city.name)
+							])),
+					A2(
+						$elm$core$List$indexedMap,
+						F2(
+							function (j, _v0) {
+								return A2(
+									$elm$html$Html$td,
+									$author$project$Mctrot$matrixCell,
+									_List_fromArray(
+										[
+											$elm$html$Html$text(
+											_Utils_eq(i, j) ? '—' : $elm$core$String$fromInt(
+												A2($author$project$Mctrot$travelTime, i, j)))
+										]));
+							}),
+						cityList)));
+		});
+	return A2(
+		$elm$html$Html$table,
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'border-collapse', 'collapse'),
+				A2($elm$html$Html$Attributes$style, 'margin-top', '0.5rem'),
+				A2($elm$html$Html$Attributes$style, 'font-size', '0.8rem'),
+				A2($elm$html$Html$Attributes$style, 'font-variant-numeric', 'tabular-nums')
+			]),
+		A2(
+			$elm$core$List$cons,
+			headerRow,
+			A2($elm$core$List$indexedMap, bodyRow, cityList)));
+}();
+var $elm$core$List$concatMap = F2(
+	function (f, list) {
+		return $elm$core$List$concat(
+			A2($elm$core$List$map, f, list));
+	});
+var $elm$core$List$maybeCons = F3(
+	function (f, mx, xs) {
+		var _v0 = f(mx);
 		if (_v0.$ === 'Just') {
-			return true;
+			var x = _v0.a;
+			return A2($elm$core$List$cons, x, xs);
 		} else {
-			return false;
+			return xs;
 		}
 	});
-var $elm$core$Set$member = F2(
-	function (key, _v0) {
-		var dict = _v0.a;
-		return A2($elm$core$Dict$member, key, dict);
+var $elm$core$List$filterMap = F2(
+	function (f, xs) {
+		return A3(
+			$elm$core$List$foldr,
+			$elm$core$List$maybeCons(f),
+			_List_Nil,
+			xs);
 	});
+var $author$project$Mctrot$closedBandsElapsed = F3(
+	function (closedInWeek, startTime, viewMax) {
+		var weekOffset = (startTime.weekday * $author$project$Mctrot$dayLength) + startTime.minutes;
+		var maxK = ((viewMax / $author$project$Mctrot$weekLength) | 0) + 2;
+		return A2(
+			$elm$core$List$filterMap,
+			function (_v1) {
+				var s = _v1.a;
+				var e = _v1.b;
+				return ((e < 0) || (_Utils_cmp(s, viewMax) > 0)) ? $elm$core$Maybe$Nothing : $elm$core$Maybe$Just(
+					_Utils_Tuple2(
+						A2($elm$core$Basics$max, 0, s),
+						A2($elm$core$Basics$min, viewMax, e)));
+			},
+			A2(
+				$elm$core$List$concatMap,
+				function (k) {
+					return A2(
+						$elm$core$List$map,
+						function (_v0) {
+							var s = _v0.a;
+							var e = _v0.b;
+							return _Utils_Tuple2((s - weekOffset) + (k * $author$project$Mctrot$weekLength), (e - weekOffset) + (k * $author$project$Mctrot$weekLength));
+						},
+						closedInWeek);
+				},
+				A2($elm$core$List$range, 0, maxK)));
+	});
+var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
+var $elm$svg$Svg$Attributes$fontSize = _VirtualDom_attribute('font-size');
+var $elm$core$String$cons = _String_cons;
+var $elm$core$String$fromChar = function (_char) {
+	return A2($elm$core$String$cons, _char, '');
+};
+var $elm$core$Bitwise$shiftRightBy = _Bitwise_shiftRightBy;
+var $elm$core$String$repeatHelp = F3(
+	function (n, chunk, result) {
+		return (n <= 0) ? result : A3(
+			$elm$core$String$repeatHelp,
+			n >> 1,
+			_Utils_ap(chunk, chunk),
+			(!(n & 1)) ? result : _Utils_ap(result, chunk));
+	});
+var $elm$core$String$repeat = F2(
+	function (n, chunk) {
+		return A3($elm$core$String$repeatHelp, n, chunk, '');
+	});
+var $elm$core$String$padLeft = F3(
+	function (n, _char, string) {
+		return _Utils_ap(
+			A2(
+				$elm$core$String$repeat,
+				n - $elm$core$String$length(string),
+				$elm$core$String$fromChar(_char)),
+			string);
+	});
+var $author$project$Mctrot$formatClock = function (absoluteMinutes) {
+	var pad = function (n) {
+		return A3(
+			$elm$core$String$padLeft,
+			2,
+			_Utils_chr('0'),
+			$elm$core$String$fromInt(n));
+	};
+	var day = (absoluteMinutes / $author$project$Mctrot$dayLength) | 0;
+	var clock = A2($elm$core$Basics$modBy, $author$project$Mctrot$dayLength, absoluteMinutes);
+	var hh = (clock / 60) | 0;
+	var mm = A2($elm$core$Basics$modBy, 60, clock);
+	return 'day ' + ($elm$core$String$fromInt(day) + (' ' + (pad(hh) + (':' + pad(mm)))));
+};
+var $elm$core$List$isEmpty = function (xs) {
+	if (!xs.b) {
+		return true;
+	} else {
+		return false;
+	}
+};
 var $elm$svg$Svg$rect = $elm$svg$Svg$trustedNode('rect');
 var $elm$svg$Svg$Attributes$stroke = _VirtualDom_attribute('stroke');
 var $elm$svg$Svg$text = $elm$virtual_dom$VirtualDom$text;
-var $elm$svg$Svg$Attributes$textAnchor = _VirtualDom_attribute('text-anchor');
 var $elm$svg$Svg$text_ = $elm$svg$Svg$trustedNode('text');
 var $elm$svg$Svg$Attributes$width = _VirtualDom_attribute('width');
 var $elm$svg$Svg$Attributes$x = _VirtualDom_attribute('x');
+var $author$project$Mctrot$xScale = F2(
+	function (viewMax, elapsedMinutes) {
+		return elapsedMinutes * ($author$project$Mctrot$timelineWidth / viewMax);
+	});
 var $elm$svg$Svg$Attributes$y = _VirtualDom_attribute('y');
-var $author$project$Sudoku$viewCell = F4(
-	function (r, c, grid, conflicts) {
-		var y = r * $author$project$Sudoku$cellSize;
-		var x = c * $author$project$Sudoku$cellSize;
-		var value = A3($author$project$Sudoku$cellAt, r, c, grid);
-		var pos = (r * 9) + c;
-		var inConflict = A2($elm$core$Set$member, pos, conflicts);
-		var given = A2(
+var $author$project$Mctrot$viewRow = F4(
+	function (startTime, viewMax, rowIndex, visit) {
+		var y = rowIndex * $author$project$Mctrot$rowHeight;
+		var departureElapsed = visit.departure - startTime.minutes;
+		var city = A2(
 			$elm$core$Maybe$withDefault,
-			false,
-			A2($elm$core$Array$get, pos, $author$project$Sudoku$isGiven));
-		return _List_fromArray(
-			[
-				A2(
-				$elm$svg$Svg$rect,
+			A3(
+				$author$project$Mctrot$City,
+				'?',
 				_List_fromArray(
 					[
-						$elm$svg$Svg$Attributes$x(
-						$elm$core$String$fromFloat(x)),
-						$elm$svg$Svg$Attributes$y(
-						$elm$core$String$fromFloat(y)),
-						$elm$svg$Svg$Attributes$width(
-						$elm$core$String$fromFloat($author$project$Sudoku$cellSize)),
-						$elm$svg$Svg$Attributes$height(
-						$elm$core$String$fromFloat($author$project$Sudoku$cellSize)),
-						$elm$svg$Svg$Attributes$fill(
-						inConflict ? '#fbdcdc' : (given ? '#f0f0f0' : '#fff')),
-						$elm$svg$Svg$Attributes$stroke('#ddd')
+						_Utils_Tuple2(0, $author$project$Mctrot$weekLength)
 					]),
 				_List_Nil),
-				A2(
-				$elm$svg$Svg$text_,
-				_List_fromArray(
-					[
-						$elm$svg$Svg$Attributes$x(
-						$elm$core$String$fromFloat(x + ($author$project$Sudoku$cellSize / 2))),
-						$elm$svg$Svg$Attributes$y(
-						$elm$core$String$fromFloat((y + ($author$project$Sudoku$cellSize / 2)) + 6)),
-						$elm$svg$Svg$Attributes$textAnchor('middle'),
-						$elm$svg$Svg$Attributes$fontSize('22'),
-						$elm$svg$Svg$Attributes$fontWeight(
-						given ? 'bold' : 'normal'),
-						$elm$svg$Svg$Attributes$fill(
-						inConflict ? '#c62828' : (given ? '#111' : '#1f6feb'))
-					]),
-				_List_fromArray(
-					[
-						$elm$svg$Svg$text(
-						$elm$core$String$fromInt(value))
-					]))
-			]);
-	});
-var $author$project$Sudoku$viewCells = F2(
-	function (grid, conflicts) {
-		return A2(
-			$elm$core$List$concatMap,
-			function (r) {
-				return A2(
-					$elm$core$List$concatMap,
-					function (c) {
-						return A4($author$project$Sudoku$viewCell, r, c, grid, conflicts);
+			A2($elm$core$Array$get, visit.cityIndex, $author$project$Mctrot$cities));
+		var label = city.name + (' — arr ' + ($author$project$Mctrot$formatClock(visit.arrival) + ((visit.wait > 0) ? (' (waited ' + ($author$project$Mctrot$formatDuration(visit.wait) + ')')) : '')));
+		var arrivalElapsed = visit.arrival - startTime.minutes;
+		return _Utils_ap(
+			_List_fromArray(
+				[
+					A2(
+					$elm$svg$Svg$rect,
+					_List_fromArray(
+						[
+							$elm$svg$Svg$Attributes$x('0'),
+							$elm$svg$Svg$Attributes$y(
+							$elm$core$String$fromFloat(y)),
+							$elm$svg$Svg$Attributes$width(
+							$elm$core$String$fromFloat($author$project$Mctrot$timelineWidth)),
+							$elm$svg$Svg$Attributes$height(
+							$elm$core$String$fromFloat($author$project$Mctrot$rowHeight - 4)),
+							$elm$svg$Svg$Attributes$fill('#fff'),
+							$elm$svg$Svg$Attributes$stroke('#eee')
+						]),
+					_List_Nil)
+				]),
+			_Utils_ap(
+				(!$elm$core$List$isEmpty(city.closedWindows)) ? A2(
+					$elm$core$List$map,
+					function (_v0) {
+						var s = _v0.a;
+						var e = _v0.b;
+						return A2(
+							$elm$svg$Svg$rect,
+							_List_fromArray(
+								[
+									$elm$svg$Svg$Attributes$x(
+									$elm$core$String$fromFloat(
+										A2($author$project$Mctrot$xScale, viewMax, s))),
+									$elm$svg$Svg$Attributes$y(
+									$elm$core$String$fromFloat(y)),
+									$elm$svg$Svg$Attributes$width(
+									$elm$core$String$fromFloat(
+										A2($author$project$Mctrot$xScale, viewMax, e - s))),
+									$elm$svg$Svg$Attributes$height(
+									$elm$core$String$fromFloat($author$project$Mctrot$rowHeight - 4)),
+									$elm$svg$Svg$Attributes$fill('#fbdcdc')
+								]),
+							_List_Nil);
 					},
-					A2($elm$core$List$range, 0, 8));
-			},
-			A2($elm$core$List$range, 0, 8));
+					A3($author$project$Mctrot$closedBandsElapsed, city.closedWindows, startTime, viewMax)) : _List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$svg$Svg$rect,
+						_List_fromArray(
+							[
+								$elm$svg$Svg$Attributes$x(
+								$elm$core$String$fromFloat(
+									A2($author$project$Mctrot$xScale, viewMax, arrivalElapsed))),
+								$elm$svg$Svg$Attributes$y(
+								$elm$core$String$fromFloat(y + 6)),
+								$elm$svg$Svg$Attributes$width(
+								$elm$core$String$fromFloat(
+									A2(
+										$elm$core$Basics$max,
+										2,
+										A2($author$project$Mctrot$xScale, viewMax, departureElapsed - arrivalElapsed)))),
+								$elm$svg$Svg$Attributes$height(
+								$elm$core$String$fromFloat($author$project$Mctrot$rowHeight - 16)),
+								$elm$svg$Svg$Attributes$fill(
+								(visit.wait > 0) ? '#e8871e' : '#1f6feb')
+							]),
+						_List_Nil),
+						A2(
+						$elm$svg$Svg$text_,
+						_List_fromArray(
+							[
+								$elm$svg$Svg$Attributes$x('4'),
+								$elm$svg$Svg$Attributes$y(
+								$elm$core$String$fromFloat((y + $author$project$Mctrot$rowHeight) - 8)),
+								$elm$svg$Svg$Attributes$fontSize('11'),
+								$elm$svg$Svg$Attributes$fill('#333')
+							]),
+						_List_fromArray(
+							[
+								$elm$svg$Svg$text(label)
+							]))
+					])));
 	});
-var $elm$svg$Svg$line = $elm$svg$Svg$trustedNode('line');
-var $elm$svg$Svg$Attributes$strokeWidth = _VirtualDom_attribute('stroke-width');
-var $elm$svg$Svg$Attributes$x1 = _VirtualDom_attribute('x1');
-var $elm$svg$Svg$Attributes$x2 = _VirtualDom_attribute('x2');
-var $elm$svg$Svg$Attributes$y1 = _VirtualDom_attribute('y1');
-var $elm$svg$Svg$Attributes$y2 = _VirtualDom_attribute('y2');
-var $author$project$Sudoku$viewGridLines = A2(
-	$elm$core$List$concatMap,
-	function (i) {
-		var thick = !A2($elm$core$Basics$modBy, 3, i);
-		var width = thick ? '3' : '1';
-		var pos = i * $author$project$Sudoku$cellSize;
-		return _List_fromArray(
-			[
-				A2(
-				$elm$svg$Svg$line,
-				_List_fromArray(
-					[
-						$elm$svg$Svg$Attributes$x1(
-						$elm$core$String$fromFloat(pos)),
-						$elm$svg$Svg$Attributes$y1('0'),
-						$elm$svg$Svg$Attributes$x2(
-						$elm$core$String$fromFloat(pos)),
-						$elm$svg$Svg$Attributes$y2(
-						$elm$core$String$fromFloat($author$project$Sudoku$boardSize)),
-						$elm$svg$Svg$Attributes$stroke('#333'),
-						$elm$svg$Svg$Attributes$strokeWidth(width)
-					]),
-				_List_Nil),
-				A2(
-				$elm$svg$Svg$line,
-				_List_fromArray(
-					[
-						$elm$svg$Svg$Attributes$x1('0'),
-						$elm$svg$Svg$Attributes$y1(
-						$elm$core$String$fromFloat(pos)),
-						$elm$svg$Svg$Attributes$x2(
-						$elm$core$String$fromFloat($author$project$Sudoku$boardSize)),
-						$elm$svg$Svg$Attributes$y2(
-						$elm$core$String$fromFloat(pos)),
-						$elm$svg$Svg$Attributes$stroke('#333'),
-						$elm$svg$Svg$Attributes$strokeWidth(width)
-					]),
-				_List_Nil)
-			]);
-	},
-	A2($elm$core$List$range, 0, 9));
-var $author$project$Sudoku$viewAnnealingPanel = function (model) {
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$Attributes$style,
-				'max-width',
-				$elm$core$String$fromFloat($author$project$Sudoku$boardSize) + 'px')
-			]),
-		A2(
-			$elm$core$List$cons,
-			A2(
-				$elm$html$Html$h3,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text('Simulated annealing (live)')
-					])),
-			function () {
-				var _v0 = model.saState;
-				if (_v0.$ === 'Nothing') {
-					return _List_fromArray(
-						[
-							$elm$html$Html$text('Filling in a starting grid...')
-						]);
-				} else {
-					var state = _v0.a;
-					var isSolved = $author$project$Sudoku$solved(state);
-					var grid = $author$project$SimulatedAnnealing$current(state);
-					var done = isSolved || A2($author$project$SimulatedAnnealing$isDone, $author$project$Sudoku$config, state);
-					var conflicts = $author$project$Sudoku$conflictingPositions(grid);
-					return _List_fromArray(
-						[
-							A2(
-							$elm$svg$Svg$svg,
-							_List_fromArray(
-								[
-									$elm$svg$Svg$Attributes$width(
-									$elm$core$String$fromFloat($author$project$Sudoku$boardSize)),
-									$elm$svg$Svg$Attributes$height(
-									$elm$core$String$fromFloat($author$project$Sudoku$boardSize))
-								]),
-							_Utils_ap(
-								A2($author$project$Sudoku$viewCells, grid, conflicts),
-								$author$project$Sudoku$viewGridLines)),
-							isSolved ? A2(
-							$elm$html$Html$p,
-							_List_fromArray(
-								[
-									A2($elm$html$Html$Attributes$style, 'color', '#1a7f37'),
-									A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Solved!')
-								])) : $elm$html$Html$text(''),
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									A2($elm$html$Html$Attributes$style, 'margin-top', '0.5rem'),
-									A2($elm$html$Html$Attributes$style, 'display', 'flex'),
-									A2($elm$html$Html$Attributes$style, 'gap', '1.5rem'),
-									A2($elm$html$Html$Attributes$style, 'flex-wrap', 'wrap')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$author$project$Sudoku$readout,
-									'Iteration',
-									$elm$core$String$fromInt(
-										$author$project$SimulatedAnnealing$iteration(state))),
-									A2(
-									$author$project$Sudoku$readout,
-									'Temperature',
-									$elm$core$String$fromFloat(
-										A2(
-											$author$project$Sudoku$roundTo,
-											3,
-											A2($author$project$SimulatedAnnealing$temperature, $author$project$Sudoku$config, state)))),
-									A2(
-									$author$project$Sudoku$readout,
-									'Current conflicts',
-									$elm$core$String$fromInt(
-										$elm$core$Basics$round(
-											$author$project$SimulatedAnnealing$currentEnergy(state)))),
-									A2(
-									$author$project$Sudoku$readout,
-									'Best conflicts',
-									$elm$core$String$fromInt(
-										$elm$core$Basics$round(
-											$author$project$SimulatedAnnealing$bestEnergy(state))))
-								])),
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									A2($elm$html$Html$Attributes$style, 'margin-top', '0.5rem'),
-									A2($elm$html$Html$Attributes$style, 'display', 'flex'),
-									A2($elm$html$Html$Attributes$style, 'gap', '0.5rem')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$button,
-									_List_fromArray(
-										[
-											$elm$html$Html$Events$onClick($author$project$Sudoku$ToggleRunning),
-											$elm$html$Html$Attributes$disabled(done)
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text(
-											done ? 'Done' : (model.running ? 'Pause' : 'Resume'))
-										])),
-									A2(
-									$elm$html$Html$button,
-									_List_fromArray(
-										[
-											$elm$html$Html$Events$onClick($author$project$Sudoku$Restart)
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('Restart (new fill)')
-										]))
-								])),
-							A2(
-							$elm$html$Html$p,
-							_List_fromArray(
-								[
-									A2($elm$html$Html$Attributes$style, 'color', '#666'),
-									A2($elm$html$Html$Attributes$style, 'font-size', '0.85rem')
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Black digits are givens. Red cells are part of a row or column conflict — boxes are never wrong, by construction.')
-								]))
-						]);
-				}
-			}()));
+var $author$project$Mctrot$SetStartDate = function (a) {
+	return {$: 'SetStartDate', a: a};
 };
-var $author$project$Sudoku$RunBacktracking = {$: 'RunBacktracking'};
-var $author$project$Sudoku$viewBacktrackingPanel = function (model) {
+var $author$project$Mctrot$SetStartTimeOfDay = function (a) {
+	return {$: 'SetStartTimeOfDay', a: a};
+};
+var $elm$html$Html$input = _VirtualDom_node('input');
+var $elm$html$Html$label = _VirtualDom_node('label');
+var $elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
+};
+var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
+};
+var $elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $elm$html$Html$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
+};
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$string(string));
+	});
+var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
+var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
+var $author$project$Mctrot$weekdayName = function (isoDate) {
+	return A2(
+		$elm$core$Maybe$andThen,
+		function (_v0) {
+			var year = _v0.a;
+			var month = _v0.b;
+			var day = _v0.c;
+			return A2(
+				$elm_community$list_extra$List$Extra$getAt,
+				A3($author$project$Mctrot$sakamotoWeekday, year, month, day),
+				_List_fromArray(
+					['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']));
+		},
+		$author$project$Mctrot$parseDate(isoDate));
+};
+var $author$project$Mctrot$viewStartPicker = function (model) {
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
 			[
-				A2(
-				$elm$html$Html$Attributes$style,
-				'max-width',
-				$elm$core$String$fromFloat($author$project$Sudoku$boardSize) + 'px')
+				A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+				A2($elm$html$Html$Attributes$style, 'gap', '1rem'),
+				A2($elm$html$Html$Attributes$style, 'align-items', 'flex-end'),
+				A2($elm$html$Html$Attributes$style, 'margin-bottom', '0.75rem')
 			]),
-		A2(
-			$elm$core$List$cons,
-			A2(
-				$elm$html$Html$h3,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$label,
 				_List_Nil,
 				_List_fromArray(
 					[
-						$elm$html$Html$text('Backtracking (deterministic)')
-					])),
-			function () {
-				var _v0 = model.deterministicSolution;
-				if (_v0.$ === 'Nothing') {
-					return _List_fromArray(
-						[
-							A2(
-							$elm$svg$Svg$svg,
-							_List_fromArray(
-								[
-									$elm$svg$Svg$Attributes$width(
-									$elm$core$String$fromFloat($author$project$Sudoku$boardSize)),
-									$elm$svg$Svg$Attributes$height(
-									$elm$core$String$fromFloat($author$project$Sudoku$boardSize))
-								]),
-							_Utils_ap(
-								A2($author$project$Sudoku$viewCells, $author$project$Sudoku$givenGrid, $elm$core$Set$empty),
-								$author$project$Sudoku$viewGridLines)),
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									A2($elm$html$Html$Attributes$style, 'margin-top', '0.5rem')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$button,
-									_List_fromArray(
-										[
-											$elm$html$Html$Events$onClick($author$project$Sudoku$RunBacktracking)
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('Solve instantly')
-										]))
-								]))
-						]);
-				} else {
-					if (_v0.a.$ === 'Nothing') {
-						var _v1 = _v0.a;
-						return _List_fromArray(
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
 							[
-								A2(
-								$elm$svg$Svg$svg,
-								_List_fromArray(
-									[
-										$elm$svg$Svg$Attributes$width(
-										$elm$core$String$fromFloat($author$project$Sudoku$boardSize)),
-										$elm$svg$Svg$Attributes$height(
-										$elm$core$String$fromFloat($author$project$Sudoku$boardSize))
-									]),
-								_Utils_ap(
-									A2($author$project$Sudoku$viewCells, $author$project$Sudoku$givenGrid, $elm$core$Set$empty),
-									$author$project$Sudoku$viewGridLines)),
-								A2(
-								$elm$html$Html$p,
-								_List_fromArray(
-									[
-										A2($elm$html$Html$Attributes$style, 'color', '#c62828')
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('No solution found — the givens are inconsistent.')
-									]))
-							]);
-					} else {
-						var grid = _v0.a.a;
-						return _List_fromArray(
+								A2($elm$html$Html$Attributes$style, 'font-size', '0.75rem'),
+								A2($elm$html$Html$Attributes$style, 'color', '#666')
+							]),
+						_List_fromArray(
 							[
-								A2(
-								$elm$svg$Svg$svg,
-								_List_fromArray(
-									[
-										$elm$svg$Svg$Attributes$width(
-										$elm$core$String$fromFloat($author$project$Sudoku$boardSize)),
-										$elm$svg$Svg$Attributes$height(
-										$elm$core$String$fromFloat($author$project$Sudoku$boardSize))
-									]),
-								_Utils_ap(
-									A2($author$project$Sudoku$viewCells, grid, $elm$core$Set$empty),
-									$author$project$Sudoku$viewGridLines)),
-								A2(
-								$elm$html$Html$p,
-								_List_fromArray(
-									[
-										A2($elm$html$Html$Attributes$style, 'color', '#1a7f37'),
-										A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('Solved!')
-									])),
-								A2(
-								$elm$html$Html$p,
-								_List_fromArray(
-									[
-										A2($elm$html$Html$Attributes$style, 'color', '#666'),
-										A2($elm$html$Html$Attributes$style, 'font-size', '0.85rem')
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('Complete on the first call — no temperature, no wandering, no chance of getting stuck. This is the right tool for Sudoku in practice; annealing is here to show the library, not because it\u0027s the best fit for this problem.')
-									]))
-							]);
-					}
-				}
-			}()));
-};
-var $author$project$Sudoku$LewisRestart = {$: 'LewisRestart'};
-var $author$project$Sudoku$LewisToggleRunning = {$: 'LewisToggleRunning'};
-var $author$project$Sudoku$viewLewisPanel = function (model) {
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
+								$elm$html$Html$text('Start date')
+							])),
+						A2(
+						$elm$html$Html$input,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$type_('date'),
+								$elm$html$Html$Attributes$value(model.startDate),
+								$elm$html$Html$Events$onInput($author$project$Mctrot$SetStartDate)
+							]),
+						_List_Nil)
+					])),
 				A2(
-				$elm$html$Html$Attributes$style,
-				'max-width',
-				$elm$core$String$fromFloat($author$project$Sudoku$boardSize) + 'px')
-			]),
-		A2(
-			$elm$core$List$cons,
-			A2(
-				$elm$html$Html$h3,
+				$elm$html$Html$label,
 				_List_Nil,
 				_List_fromArray(
 					[
-						$elm$html$Html$text('Simulated annealing (Lewis 2007)')
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'font-size', '0.75rem'),
+								A2($elm$html$Html$Attributes$style, 'color', '#666')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Start time')
+							])),
+						A2(
+						$elm$html$Html$input,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$type_('time'),
+								$elm$html$Html$Attributes$value(model.startTimeOfDay),
+								$elm$html$Html$Events$onInput($author$project$Mctrot$SetStartTimeOfDay)
+							]),
+						_List_Nil)
 					])),
-			function () {
-				var _v0 = model.lewis;
-				if (_v0.$ === 'Nothing') {
-					return _List_fromArray(
-						[
-							$elm$html$Html$text('Calibrating starting temperature...')
-						]);
-				} else {
-					var run = _v0.a;
-					var t0 = run.config.temperature(0);
-					var isSolved = !$author$project$SimulatedAnnealing$bestEnergy(run.state);
-					var grid = $author$project$SimulatedAnnealing$current(run.state);
-					var done = isSolved || A2($author$project$SimulatedAnnealing$isDone, run.config, run.state);
-					var conflicts = $author$project$Sudoku$conflictingPositions(grid);
-					var chainIndex = $author$project$Sudoku$lewisChainIndex(run.state);
-					var stagnantChains = chainIndex - run.bestChainIndex;
-					return _List_fromArray(
-						[
-							A2(
-							$elm$svg$Svg$svg,
-							_List_fromArray(
-								[
-									$elm$svg$Svg$Attributes$width(
-									$elm$core$String$fromFloat($author$project$Sudoku$boardSize)),
-									$elm$svg$Svg$Attributes$height(
-									$elm$core$String$fromFloat($author$project$Sudoku$boardSize))
-								]),
-							_Utils_ap(
-								A2($author$project$Sudoku$viewCells, grid, conflicts),
-								$author$project$Sudoku$viewGridLines)),
-							isSolved ? A2(
-							$elm$html$Html$p,
-							_List_fromArray(
-								[
-									A2($elm$html$Html$Attributes$style, 'color', '#1a7f37'),
-									A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Solved!')
-								])) : $elm$html$Html$text(''),
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									A2($elm$html$Html$Attributes$style, 'margin-top', '0.5rem'),
-									A2($elm$html$Html$Attributes$style, 'display', 'flex'),
-									A2($elm$html$Html$Attributes$style, 'gap', '1.1rem'),
-									A2($elm$html$Html$Attributes$style, 'flex-wrap', 'wrap')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$author$project$Sudoku$readout,
-									'Chain',
-									$elm$core$String$fromInt(chainIndex)),
-									A2(
-									$author$project$Sudoku$readout,
-									'Stagnant chains',
-									$elm$core$String$fromInt(stagnantChains) + (' / ' + $elm$core$String$fromInt($author$project$Sudoku$reheatPatience))),
-									A2(
-									$author$project$Sudoku$readout,
-									't0 (calibrated)',
-									$elm$core$String$fromFloat(
-										A2($author$project$Sudoku$roundTo, 3, t0))),
-									A2(
-									$author$project$Sudoku$readout,
-									'Temperature',
-									$elm$core$String$fromFloat(
-										A2(
-											$author$project$Sudoku$roundTo,
-											3,
-											A2($author$project$SimulatedAnnealing$temperature, run.config, run.state)))),
-									A2(
-									$author$project$Sudoku$readout,
-									'Current conflicts',
-									$elm$core$String$fromInt(
-										$elm$core$Basics$round(
-											$author$project$SimulatedAnnealing$currentEnergy(run.state)))),
-									A2(
-									$author$project$Sudoku$readout,
-									'Best conflicts',
-									$elm$core$String$fromInt(
-										$elm$core$Basics$round(
-											$author$project$SimulatedAnnealing$bestEnergy(run.state)))),
-									A2(
-									$author$project$Sudoku$readout,
-									'Reheats',
-									$elm$core$String$fromInt(run.reheatCount))
-								])),
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									A2($elm$html$Html$Attributes$style, 'margin-top', '0.5rem'),
-									A2($elm$html$Html$Attributes$style, 'display', 'flex'),
-									A2($elm$html$Html$Attributes$style, 'gap', '0.5rem')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$button,
-									_List_fromArray(
-										[
-											$elm$html$Html$Events$onClick($author$project$Sudoku$LewisToggleRunning),
-											$elm$html$Html$Attributes$disabled(done)
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text(
-											done ? 'Done' : (model.lewisRunning ? 'Pause' : 'Resume'))
-										])),
-									A2(
-									$elm$html$Html$button,
-									_List_fromArray(
-										[
-											$elm$html$Html$Events$onClick($author$project$Sudoku$LewisRestart)
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('Restart (recalibrate)')
-										]))
-								])),
-							A2(
-							$elm$html$Html$p,
-							_List_fromArray(
-								[
-									A2($elm$html$Html$Attributes$style, 'color', '#666'),
-									A2($elm$html$Html$Attributes$style, 'font-size', '0.85rem')
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text(
-									'Chain length ml = ' + ($elm$core$String$fromInt($author$project$Sudoku$markovChainLength) + ' moves. Temperature only drops between chains, not every move; a reheat resets to the original t0 with a fresh random fill, but keeps that same t0 — only \u0022Restart\u0022 below recalibrates it.'))
-								]))
-						]);
-				}
-			}()));
-};
-var $author$project$Sudoku$view = function (model) {
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				A2($elm$html$Html$Attributes$style, 'font-family', 'sans-serif')
-			]),
-		_List_fromArray(
-			[
 				A2(
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						A2($elm$html$Html$Attributes$style, 'display', 'flex'),
-						A2($elm$html$Html$Attributes$style, 'gap', '2.5rem'),
-						A2($elm$html$Html$Attributes$style, 'flex-wrap', 'wrap')
+						A2($elm$html$Html$Attributes$style, 'font-size', '0.8rem'),
+						A2($elm$html$Html$Attributes$style, 'color', '#666')
 					]),
 				_List_fromArray(
 					[
-						$author$project$Sudoku$viewAnnealingPanel(model),
-						$author$project$Sudoku$viewLewisPanel(model),
-						$author$project$Sudoku$viewBacktrackingPanel(model)
+						$elm$html$Html$text(
+						function () {
+							var _v0 = $author$project$Mctrot$weekdayName(model.startDate);
+							if (_v0.$ === 'Just') {
+								var day = _v0.a;
+								return 'Starts ' + (day + (model.started ? ' (change applies on restart)' : ''));
+							} else {
+								return 'Pick a valid date';
+							}
+						}())
 					]))
 			]));
 };
-var $author$project$Sudoku$main = $elm$browser$Browser$element(
-	{init: $author$project$Sudoku$init, subscriptions: $author$project$Sudoku$subscriptions, update: $author$project$Sudoku$update, view: $author$project$Sudoku$view});
-_Platform_export({'Sudoku':{'init':$author$project$Sudoku$main(
+var $author$project$Mctrot$view = function (model) {
+	var _v0 = model.saState;
+	if (_v0.$ === 'Nothing') {
+		return $elm$html$Html$text('Choosing a starting seed...');
+	} else {
+		var state = _v0.a;
+		var tour = $author$project$SimulatedAnnealing$current(state);
+		var viewMax = A2(
+			$elm$core$Basics$max,
+			600,
+			(((A2($author$project$Mctrot$totalMinutes, model.activeStart, tour) / 60) | 0) + 1) * 60);
+		var visits = A2($author$project$Mctrot$simulate, model.activeStart, tour);
+		var done = A2(
+			$author$project$SimulatedAnnealing$isDone,
+			$author$project$Mctrot$config(model.activeStart),
+			state);
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'font-family', 'sans-serif'),
+					A2($elm$html$Html$Attributes$style, 'max-width', '800px')
+				]),
+			_List_fromArray(
+				[
+					$author$project$Mctrot$viewStartPicker(model),
+					A2(
+					$elm$svg$Svg$svg,
+					_List_fromArray(
+						[
+							$elm$svg$Svg$Attributes$width(
+							$elm$core$String$fromFloat($author$project$Mctrot$timelineWidth)),
+							$elm$svg$Svg$Attributes$height(
+							$elm$core$String$fromFloat(
+								($author$project$Mctrot$rowHeight * $elm$core$List$length(visits)) + 10))
+						]),
+					$elm$core$List$concat(
+						A2(
+							$elm$core$List$indexedMap,
+							A2($author$project$Mctrot$viewRow, model.activeStart, viewMax),
+							visits))),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$style, 'margin-top', '0.5rem'),
+							A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+							A2($elm$html$Html$Attributes$style, 'gap', '1.5rem')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$author$project$Mctrot$readout,
+							'Iteration',
+							$elm$core$String$fromInt(
+								$author$project$SimulatedAnnealing$iteration(state))),
+							A2(
+							$author$project$Mctrot$readout,
+							'Temperature',
+							$elm$core$String$fromInt(
+								$elm$core$Basics$round(
+									A2(
+										$author$project$SimulatedAnnealing$temperature,
+										$author$project$Mctrot$config(model.activeStart),
+										state)))),
+							A2(
+							$author$project$Mctrot$readout,
+							'Current route time',
+							$author$project$Mctrot$formatDuration(
+								$elm$core$Basics$round(
+									$author$project$SimulatedAnnealing$currentEnergy(state)))),
+							A2(
+							$author$project$Mctrot$readout,
+							'Best route time',
+							$author$project$Mctrot$formatDuration(
+								$elm$core$Basics$round(
+									$author$project$SimulatedAnnealing$bestEnergy(state))))
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$style, 'margin-top', '0.5rem'),
+							A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+							A2($elm$html$Html$Attributes$style, 'gap', '0.5rem')
+						]),
+					_List_fromArray(
+						[
+							model.started ? A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Events$onClick($author$project$Mctrot$ToggleRunning),
+									$elm$html$Html$Attributes$disabled(done)
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									done ? 'Done' : (model.running ? 'Pause' : 'Resume'))
+								])) : A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Events$onClick($author$project$Mctrot$Start)
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Start')
+								])),
+							A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Events$onClick($author$project$Mctrot$Restart)
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Restart (new seed)')
+								]))
+						])),
+					A2(
+					$elm$html$Html$p,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$style, 'color', '#666'),
+							A2($elm$html$Html$Attributes$style, 'font-size', '0.85rem')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Pink bands are hours a city is closed. Orange bars are time spent waiting for a city to open.')
+						])),
+					A2(
+					$elm$html$Html$details,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$style, 'margin-top', '0.5rem')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$summary,
+							_List_fromArray(
+								[
+									A2($elm$html$Html$Attributes$style, 'cursor', 'pointer'),
+									A2($elm$html$Html$Attributes$style, 'color', '#666')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Travel time matrix (minutes)')
+								])),
+							$author$project$Mctrot$viewCostMatrix
+						]))
+				]));
+	}
+};
+var $author$project$Mctrot$main = $elm$browser$Browser$element(
+	{init: $author$project$Mctrot$init, subscriptions: $author$project$Mctrot$subscriptions, update: $author$project$Mctrot$update, view: $author$project$Mctrot$view});
+_Platform_export({'Mctrot':{'init':$author$project$Mctrot$main(
 	$elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});}(this));
 
-  var app = Elm.Sudoku.init({ node: document.getElementById("elm") });
+  var app = Elm.Mctrot.init({ node: document.getElementById("elm") });
 }
 catch (e)
 {

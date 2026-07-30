@@ -264,6 +264,7 @@ initialTour =
 type alias Model =
     { saState : Maybe (State Tour)
     , running : Bool
+    , started : Bool
     , stepsPerFrame : Int
     }
 
@@ -271,13 +272,14 @@ type alias Model =
 type Msg
     = GotSeed Random.Seed
     | Tick
+    | Start
     | ToggleRunning
     | Restart
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { saState = Nothing, running = False, stepsPerFrame = 30 }
+    ( { saState = Nothing, running = False, started = False, stepsPerFrame = 30 }
     , Random.generate GotSeed Random.independentSeed
     )
 
@@ -290,7 +292,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         GotSeed seed ->
-            ( { model | saState = Just (SimulatedAnnealing.init config seed initialTour), running = True }
+            ( { model | saState = Just (SimulatedAnnealing.init config seed initialTour), running = False }
             , Cmd.none
             )
 
@@ -304,11 +306,14 @@ update msg model =
                     , Cmd.none
                     )
 
+        Start ->
+            ( { model | running = True, started = True }, Cmd.none )
+
         ToggleRunning ->
             ( { model | running = not model.running }, Cmd.none )
 
         Restart ->
-            ( { model | saState = Nothing }, Random.generate GotSeed Random.independentSeed )
+            ( { model | saState = Nothing, running = False, started = False }, Random.generate GotSeed Random.independentSeed )
 
 
 
@@ -376,22 +381,31 @@ view model =
                     , readout "Best route time" (formatDuration (round (SimulatedAnnealing.bestEnergy state)))
                     ]
                 , Html.div [ Attr.style "margin-top" "0.5rem", Attr.style "display" "flex", Attr.style "gap" "0.5rem" ]
-                    [ Html.button [ Events.onClick ToggleRunning, Attr.disabled done ]
-                        [ Html.text
-                            (if done then
-                                "Done"
+                    [ if model.started then
+                        Html.button [ Events.onClick ToggleRunning, Attr.disabled done ]
+                            [ Html.text
+                                (if done then
+                                    "Done"
 
-                             else if model.running then
-                                "Pause"
+                                 else if model.running then
+                                    "Pause"
 
-                             else
-                                "Resume"
-                            )
-                        ]
+                                 else
+                                    "Resume"
+                                )
+                            ]
+
+                      else
+                        Html.button [ Events.onClick Start ] [ Html.text "Start" ]
                     , Html.button [ Events.onClick Restart ] [ Html.text "Restart (new seed)" ]
                     ]
                 , Html.p [ Attr.style "color" "#666", Attr.style "font-size" "0.85rem" ]
                     [ Html.text "Pink bands are hours a city is closed. Orange bars are time spent waiting for a city to open." ]
+                , Html.details [ Attr.style "margin-top" "0.5rem" ]
+                    [ Html.summary [ Attr.style "cursor" "pointer", Attr.style "color" "#666" ]
+                        [ Html.text "Travel time matrix (minutes)" ]
+                    , viewCostMatrix
+                    ]
                 ]
 
 
@@ -512,6 +526,51 @@ closedBands viewMax =
                 else
                     Just ( max 0 s, min viewMax e )
             )
+
+
+matrixCell : List (Html.Attribute msg)
+matrixCell =
+    [ Attr.style "border" "1px solid #ddd"
+    , Attr.style "padding" "2px 6px"
+    , Attr.style "text-align" "center"
+    ]
+
+
+viewCostMatrix : Html msg
+viewCostMatrix =
+    let
+        cityList =
+            Array.toList cities
+
+        headerRow =
+            Html.tr []
+                (Html.th matrixCell [] :: List.map (\c -> Html.th matrixCell [ Html.text c.name ]) cityList)
+
+        bodyRow i city =
+            Html.tr []
+                (Html.th matrixCell [ Html.text city.name ]
+                    :: List.indexedMap
+                        (\j _ ->
+                            Html.td matrixCell
+                                [ Html.text
+                                    (if i == j then
+                                        "—"
+
+                                     else
+                                        String.fromInt (travelTime i j)
+                                    )
+                                ]
+                        )
+                        cityList
+                )
+    in
+    Html.table
+        [ Attr.style "border-collapse" "collapse"
+        , Attr.style "margin-top" "0.5rem"
+        , Attr.style "font-size" "0.8rem"
+        , Attr.style "font-variant-numeric" "tabular-nums"
+        ]
+        (headerRow :: List.indexedMap bodyRow cityList)
 
 
 formatClock : Int -> String
