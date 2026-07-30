@@ -1,6 +1,6 @@
 This library is entirely written by Claude Sonnet 5. I'm happy with it and find it useful, but I'm leaning against publishing it to Elm packages.
 
-To use in your project, clone it to a vendor/ directory and add vendor/elm-simulated-annealing/src to your "source-directories" in your elm.json.
+To use in your project, clone it to a `vendor/` directory and add `vendor/elm-simulated-annealing/src` to `source-directories` in your elm.json file.
 
 # elm-simulated-annealing
 
