@@ -2,8 +2,8 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Mctrot</title>
-  <style>body { padding: 0; margin: 3em; }</style>
+  <title>TimeWindows</title>
+  <style>body { padding: 0; margin: 0; }</style>
 </head>
 
 <body>
@@ -5264,11 +5264,9 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$element = _Browser_element;
-var $author$project$Mctrot$GotSeed = function (a) {
+var $author$project$TimeWindows$GotSeed = function (a) {
 	return {$: 'GotSeed', a: a};
 };
-var $author$project$Mctrot$defaultMinutesPerMile = 24;
-var $elm$core$String$fromFloat = _String_fromNumber;
 var $elm$random$Random$Generate = function (a) {
 	return {$: 'Generate', a: a};
 };
@@ -5453,155 +5451,12 @@ var $elm$random$Random$independentSeed = $elm$random$Random$Generator(
 			A4($elm$random$Random$map3, makeIndependentSeed, gen, gen, gen),
 			seed0);
 	});
-var $author$project$Mctrot$metersPerMile = 1609.344;
-var $author$project$Mctrot$metersPerMinuteFromPace = function (minutesPerMile) {
-	return $author$project$Mctrot$metersPerMile / minutesPerMile;
-};
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
-var $elm$core$Basics$modBy = _Basics_modBy;
-var $author$project$Mctrot$parseDate = function (isoDate) {
-	var _v0 = A2(
-		$elm$core$List$map,
-		$elm$core$String$toInt,
-		A2($elm$core$String$split, '-', isoDate));
-	if ((((((_v0.b && (_v0.a.$ === 'Just')) && _v0.b.b) && (_v0.b.a.$ === 'Just')) && _v0.b.b.b) && (_v0.b.b.a.$ === 'Just')) && (!_v0.b.b.b.b)) {
-		var year = _v0.a.a;
-		var _v1 = _v0.b;
-		var month = _v1.a.a;
-		var _v2 = _v1.b;
-		var day = _v2.a.a;
-		return $elm$core$Maybe$Just(
-			_Utils_Tuple3(year, month, day));
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $elm$core$List$drop = F2(
-	function (n, list) {
-		drop:
-		while (true) {
-			if (n <= 0) {
-				return list;
-			} else {
-				if (!list.b) {
-					return list;
-				} else {
-					var x = list.a;
-					var xs = list.b;
-					var $temp$n = n - 1,
-						$temp$list = xs;
-					n = $temp$n;
-					list = $temp$list;
-					continue drop;
-				}
-			}
-		}
-	});
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $elm_community$list_extra$List$Extra$getAt = F2(
-	function (idx, xs) {
-		return (idx < 0) ? $elm$core$Maybe$Nothing : $elm$core$List$head(
-			A2($elm$core$List$drop, idx, xs));
-	});
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
-var $author$project$Mctrot$sakamotoWeekday = F3(
-	function (year, month, day) {
-		var y = (month < 3) ? (year - 1) : year;
-		var offsets = _List_fromArray(
-			[0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4]);
-		var offset = A2(
-			$elm$core$Maybe$withDefault,
-			0,
-			A2($elm_community$list_extra$List$Extra$getAt, month - 1, offsets));
-		return A2($elm$core$Basics$modBy, 7, ((((y + ((y / 4) | 0)) - ((y / 100) | 0)) + ((y / 400) | 0)) + offset) + day);
-	});
-var $author$project$Mctrot$mondayIndexedWeekday = function (isoDate) {
-	return A2(
-		$elm$core$Maybe$withDefault,
-		0,
-		A2(
-			$elm$core$Maybe$map,
-			function (_v0) {
-				var year = _v0.a;
-				var month = _v0.b;
-				var day = _v0.c;
-				return A2(
-					$elm$core$Basics$modBy,
-					7,
-					A3($author$project$Mctrot$sakamotoWeekday, year, month, day) + 6);
-			},
-			$author$project$Mctrot$parseDate(isoDate)));
-};
-var $elm$core$String$toFloat = _String_toFloat;
-var $author$project$Mctrot$parseMinutesPerMile = function (raw) {
-	var _v0 = $elm$core$String$toFloat(raw);
-	if (_v0.$ === 'Just') {
-		var minutesPerMile = _v0.a;
-		return (minutesPerMile > 0) ? minutesPerMile : $author$project$Mctrot$defaultMinutesPerMile;
-	} else {
-		return $author$project$Mctrot$defaultMinutesPerMile;
-	}
-};
-var $author$project$Mctrot$parseStartMinutes = function (timeOfDay) {
-	var _v0 = A2(
-		$elm$core$List$map,
-		$elm$core$String$toInt,
-		A2($elm$core$String$split, ':', timeOfDay));
-	if ((((_v0.b && (_v0.a.$ === 'Just')) && _v0.b.b) && (_v0.b.a.$ === 'Just')) && (!_v0.b.b.b)) {
-		var hh = _v0.a.a;
-		var _v1 = _v0.b;
-		var mm = _v1.a.a;
-		return (hh * 60) + mm;
-	} else {
-		return 6 * 60;
-	}
-};
-var $author$project$Mctrot$init = function (_v0) {
-	var speedInput = $elm$core$String$fromFloat($author$project$Mctrot$defaultMinutesPerMile);
+var $author$project$TimeWindows$init = function (_v0) {
 	return _Utils_Tuple2(
-		{
-			activeStart: {
-				metersPerMinute: $author$project$Mctrot$metersPerMinuteFromPace(
-					$author$project$Mctrot$parseMinutesPerMile(speedInput)),
-				minutes: $author$project$Mctrot$parseStartMinutes('06:00'),
-				weekday: $author$project$Mctrot$mondayIndexedWeekday('2025-01-06')
-			},
-			running: false,
-			saState: $elm$core$Maybe$Nothing,
-			speedInput: speedInput,
-			startDate: '2025-01-06',
-			startTimeOfDay: '06:00',
-			started: false,
-			stepsPerFrame: 30
-		},
-		A2($elm$random$Random$generate, $author$project$Mctrot$GotSeed, $elm$random$Random$independentSeed));
+		{running: false, saState: $elm$core$Maybe$Nothing, started: false, stepsPerFrame: 30},
+		A2($elm$random$Random$generate, $author$project$TimeWindows$GotSeed, $elm$random$Random$independentSeed));
 };
-var $author$project$Mctrot$Tick = {$: 'Tick'};
+var $author$project$TimeWindows$Tick = {$: 'Tick'};
 var $elm$core$Basics$composeL = F3(
 	function (g, f, x) {
 		return g(
@@ -5632,9 +5487,19 @@ var $elm_community$list_extra$List$Extra$last = function (items) {
 		}
 	}
 };
-var $author$project$Mctrot$City = F3(
-	function (name, openWindows, closedWindows) {
-		return {closedWindows: closedWindows, name: name, openWindows: openWindows};
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $author$project$TimeWindows$City = F2(
+	function (name, windowed) {
+		return {name: name, windowed: windowed};
 	});
 var $elm$core$Array$fromListHelp = F3(
 	function (list, nodeList, nodeListSize) {
@@ -5671,578 +5536,20 @@ var $elm$core$Array$fromList = function (list) {
 		return A3($elm$core$Array$fromListHelp, list, _List_Nil, 0);
 	}
 };
-var $author$project$Mctrot$cities = $elm$core$Array$fromList(
+var $author$project$TimeWindows$cities = $elm$core$Array$fromList(
 	_List_fromArray(
 		[
-			A3(
-			$author$project$Mctrot$City,
-			'DRIVETHRU',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'ACP',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'RIVERVIEW',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'BRACES',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'COLUMBIA',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'RAMP',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'BIGMAC',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'SHIP',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'TITANIC',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'103',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'CHAMFER',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'OG',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'METROPOLITAN',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'CLOCK',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'STRADDLER',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'72ND',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'SLOPER',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'CORNELL',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'STIJL',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(360, 1440),
-					_Utils_Tuple2(1800, 2880),
-					_Utils_Tuple2(3240, 8640),
-					_Utils_Tuple2(9000, 10080)
-				]),
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 360),
-					_Utils_Tuple2(1440, 1800),
-					_Utils_Tuple2(2880, 3240),
-					_Utils_Tuple2(8640, 9000)
-				])),
-			A3(
-			$author$project$Mctrot$City,
-			'PUNCH',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'CHURCH',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(360, 1440),
-					_Utils_Tuple2(1800, 2880),
-					_Utils_Tuple2(3240, 4320),
-					_Utils_Tuple2(4680, 8640),
-					_Utils_Tuple2(9000, 10080)
-				]),
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 360),
-					_Utils_Tuple2(1440, 1800),
-					_Utils_Tuple2(2880, 3240),
-					_Utils_Tuple2(4320, 4680),
-					_Utils_Tuple2(8640, 9000)
-				])),
-			A3(
-			$author$project$Mctrot$City,
-			'SHORTY',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'CONNOLY\u0027S',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(360, 1380),
-					_Utils_Tuple2(1800, 2820),
-					_Utils_Tuple2(3240, 4260),
-					_Utils_Tuple2(4680, 5700),
-					_Utils_Tuple2(6120, 7140),
-					_Utils_Tuple2(7560, 8580),
-					_Utils_Tuple2(9000, 10020)
-				]),
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 360),
-					_Utils_Tuple2(1380, 1800),
-					_Utils_Tuple2(2820, 3240),
-					_Utils_Tuple2(4260, 4680),
-					_Utils_Tuple2(5700, 6120),
-					_Utils_Tuple2(7140, 7560),
-					_Utils_Tuple2(8580, 9000),
-					_Utils_Tuple2(10020, 10080)
-				])),
-			A3(
-			$author$project$Mctrot$City,
-			'WHORL',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'SHOWCASE',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'GIRAFFE',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'PIANO FACTORY',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'7TH',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(360, 1440),
-					_Utils_Tuple2(1800, 2880),
-					_Utils_Tuple2(3240, 4320),
-					_Utils_Tuple2(4680, 8640),
-					_Utils_Tuple2(9000, 10080)
-				]),
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 360),
-					_Utils_Tuple2(1440, 1800),
-					_Utils_Tuple2(2880, 3240),
-					_Utils_Tuple2(4320, 4680),
-					_Utils_Tuple2(8640, 9000)
-				])),
-			A3(
-			$author$project$Mctrot$City,
-			'B&H',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'MACY',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'PENN',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'SHORTY II',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(240, 1440),
-					_Utils_Tuple2(1830, 2880),
-					_Utils_Tuple2(3270, 8640),
-					_Utils_Tuple2(8880, 10080)
-				]),
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 240),
-					_Utils_Tuple2(1440, 1830),
-					_Utils_Tuple2(2880, 3270),
-					_Utils_Tuple2(8640, 8880)
-				])),
-			A3(
-			$author$project$Mctrot$City,
-			'MCCAFE PUNK',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'PARK',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'SHORTY III',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(420, 1380),
-					_Utils_Tuple2(1860, 2820),
-					_Utils_Tuple2(3300, 4260),
-					_Utils_Tuple2(4740, 5700),
-					_Utils_Tuple2(6180, 7200),
-					_Utils_Tuple2(7620, 8640),
-					_Utils_Tuple2(9060, 10020)
-				]),
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 420),
-					_Utils_Tuple2(1380, 1860),
-					_Utils_Tuple2(2820, 3300),
-					_Utils_Tuple2(4260, 4740),
-					_Utils_Tuple2(5700, 6180),
-					_Utils_Tuple2(7200, 7620),
-					_Utils_Tuple2(8640, 9060),
-					_Utils_Tuple2(10020, 10080)
-				])),
-			A3(
-			$author$project$Mctrot$City,
-			'MICHAELS',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(360, 1440),
-					_Utils_Tuple2(1800, 2880),
-					_Utils_Tuple2(3240, 4320),
-					_Utils_Tuple2(4680, 5760),
-					_Utils_Tuple2(6120, 8640),
-					_Utils_Tuple2(9000, 10080)
-				]),
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 360),
-					_Utils_Tuple2(1440, 1800),
-					_Utils_Tuple2(2880, 3240),
-					_Utils_Tuple2(4320, 4680),
-					_Utils_Tuple2(5760, 6120),
-					_Utils_Tuple2(8640, 9000)
-				])),
-			A3(
-			$author$project$Mctrot$City,
-			'TALLBOY',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(360, 1440),
-					_Utils_Tuple2(1800, 2880),
-					_Utils_Tuple2(3240, 8640),
-					_Utils_Tuple2(9000, 10080)
-				]),
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 360),
-					_Utils_Tuple2(1440, 1800),
-					_Utils_Tuple2(2880, 3240),
-					_Utils_Tuple2(8640, 9000)
-				])),
-			A3(
-			$author$project$Mctrot$City,
-			'UNION',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(360, 1440),
-					_Utils_Tuple2(1800, 2880),
-					_Utils_Tuple2(3240, 4320),
-					_Utils_Tuple2(4680, 5760),
-					_Utils_Tuple2(6120, 7200),
-					_Utils_Tuple2(7560, 8640),
-					_Utils_Tuple2(9000, 10080)
-				]),
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 360),
-					_Utils_Tuple2(1440, 1800),
-					_Utils_Tuple2(2880, 3240),
-					_Utils_Tuple2(4320, 4680),
-					_Utils_Tuple2(5760, 6120),
-					_Utils_Tuple2(7200, 7560),
-					_Utils_Tuple2(8640, 9000)
-				])),
-			A3(
-			$author$project$Mctrot$City,
-			'OVERLAND',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(420, 1440),
-					_Utils_Tuple2(1860, 2880),
-					_Utils_Tuple2(3300, 4320),
-					_Utils_Tuple2(4740, 8640),
-					_Utils_Tuple2(9060, 10080)
-				]),
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 420),
-					_Utils_Tuple2(1440, 1860),
-					_Utils_Tuple2(2880, 3300),
-					_Utils_Tuple2(4320, 4740),
-					_Utils_Tuple2(8640, 9060)
-				])),
-			A3(
-			$author$project$Mctrot$City,
-			'IMMACULATE',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'NYU',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'VARICK',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'麦当劳',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(390, 1440),
-					_Utils_Tuple2(1830, 2880),
-					_Utils_Tuple2(3270, 4320),
-					_Utils_Tuple2(4710, 5760),
-					_Utils_Tuple2(6150, 7200),
-					_Utils_Tuple2(7590, 8640),
-					_Utils_Tuple2(9030, 10080)
-				]),
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 390),
-					_Utils_Tuple2(1440, 1830),
-					_Utils_Tuple2(2880, 3270),
-					_Utils_Tuple2(4320, 4710),
-					_Utils_Tuple2(5760, 6150),
-					_Utils_Tuple2(7200, 7590),
-					_Utils_Tuple2(8640, 9030)
-				])),
-			A3(
-			$author$project$Mctrot$City,
-			'GREENHOUSE',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(420, 1440),
-					_Utils_Tuple2(1860, 2880),
-					_Utils_Tuple2(3300, 8640),
-					_Utils_Tuple2(9060, 10080)
-				]),
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 420),
-					_Utils_Tuple2(1440, 1860),
-					_Utils_Tuple2(2880, 3300),
-					_Utils_Tuple2(8640, 9060)
-				])),
-			A3(
-			$author$project$Mctrot$City,
-			'DELANCEY',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'GREENWICH',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil),
-			A3(
-			$author$project$Mctrot$City,
-			'OCCUPY',
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, 10080)
-				]),
-			_List_Nil)
+			A2($author$project$TimeWindows$City, 'Depot', false),
+			A2($author$project$TimeWindows$City, 'A', false),
+			A2($author$project$TimeWindows$City, 'B', true),
+			A2($author$project$TimeWindows$City, 'C', false),
+			A2($author$project$TimeWindows$City, 'D', true),
+			A2($author$project$TimeWindows$City, 'E', false),
+			A2($author$project$TimeWindows$City, 'F', true),
+			A2($author$project$TimeWindows$City, 'G', false),
+			A2($author$project$TimeWindows$City, 'H', true),
+			A2($author$project$TimeWindows$City, 'I', true)
 		]));
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
-var $elm$core$Tuple$second = function (_v0) {
-	var y = _v0.b;
-	return y;
-};
-var $elm$core$Array$toIndexedList = function (array) {
-	var len = array.a;
-	var helper = F2(
-		function (entry, _v0) {
-			var index = _v0.a;
-			var list = _v0.b;
-			return _Utils_Tuple2(
-				index - 1,
-				A2(
-					$elm$core$List$cons,
-					_Utils_Tuple2(index, entry),
-					list));
-		});
-	return A3(
-		$elm$core$Array$foldr,
-		helper,
-		_Utils_Tuple2(len - 1, _List_Nil),
-		array).b;
-};
-var $author$project$Mctrot$endIndex = A2(
-	$elm$core$Maybe$withDefault,
-	0,
-	A2(
-		$elm$core$Maybe$map,
-		$elm$core$Tuple$first,
-		$elm$core$List$head(
-			A2(
-				$elm$core$List$filter,
-				function (_v0) {
-					var city = _v0.b;
-					return city.name === 'OCCUPY';
-				},
-				$elm$core$Array$toIndexedList($author$project$Mctrot$cities)))));
 var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
 var $elm$core$Basics$ge = _Utils_ge;
 var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
@@ -6283,22 +5590,28 @@ var $elm$core$Array$get = F2(
 			A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, tail)) : $elm$core$Maybe$Just(
 			A3($elm$core$Array$getHelp, startShift, index, tree)));
 	});
-var $author$project$Mctrot$dayLength = 24 * 60;
-var $author$project$Mctrot$weekLength = 7 * $author$project$Mctrot$dayLength;
-var $author$project$Mctrot$openWindowsFor = function (cityIndex) {
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$TimeWindows$cityIsWindowed = function (cityIndex) {
 	return A2(
 		$elm$core$Maybe$withDefault,
-		_List_fromArray(
-			[
-				_Utils_Tuple2(0, $author$project$Mctrot$weekLength)
-			]),
+		false,
 		A2(
 			$elm$core$Maybe$map,
 			function ($) {
-				return $.openWindows;
+				return $.windowed;
 			},
-			A2($elm$core$Array$get, cityIndex, $author$project$Mctrot$cities)));
+			A2($elm$core$Array$get, cityIndex, $author$project$TimeWindows$cities)));
 };
+var $author$project$TimeWindows$depotIndex = 0;
+var $author$project$TimeWindows$startTime = 6 * 60;
 var $elm$core$Maybe$andThen = F2(
 	function (callback, maybeValue) {
 		if (maybeValue.$ === 'Just') {
@@ -6308,291 +5621,112 @@ var $elm$core$Maybe$andThen = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
-var $author$project$Mctrot$distanceMeters = $elm$core$Array$fromList(
+var $author$project$TimeWindows$costMatrix = $elm$core$Array$fromList(
 	_List_fromArray(
 		[
 			$elm$core$Array$fromList(
 			_List_fromArray(
-				[0, 1127, 1527, 1509, 2005, 2475, 2706, 3143, 3706, 3846, 4062, 4438, 4505, 5308, 5767, 6262, 6061, 6848, 7498, 6961, 7374, 8144, 7969, 8015, 7942, 8080, 8219, 8269, 8636, 8660, 8831, 9511, 9264, 9641, 9854, 9748, 10530, 10224, 10279, 11221, 11267, 11508, 12607, 11759, 12755, 13088, 13777])),
+				[0, 30, 35, 70, 30, 25, 30, 45, 65, 45])),
 			$elm$core$Array$fromList(
 			_List_fromArray(
-				[1127, 0, 2529, 420, 1180, 3507, 1795, 4175, 2579, 2771, 5093, 3311, 3462, 4231, 6895, 5135, 7188, 5897, 6412, 5834, 6247, 7060, 6841, 6887, 6815, 6953, 7092, 7141, 7509, 7533, 7703, 8415, 8137, 8513, 8727, 8620, 9550, 9096, 9152, 10209, 10140, 10380, 11480, 10632, 11627, 11961, 12650])),
+				[30, 0, 25, 50, 45, 80, 85, 60, 40, 45])),
 			$elm$core$Array$fromList(
 			_List_fromArray(
-				[1527, 2529, 0, 2109, 1358, 1127, 4063, 2037, 3344, 4964, 2955, 4070, 5655, 6423, 4854, 6072, 5418, 8090, 8605, 7420, 7888, 9251, 8996, 8529, 8456, 8539, 9157, 8783, 9095, 9175, 9345, 10331, 9779, 10266, 10374, 10262, 11286, 10743, 10794, 11855, 11787, 12022, 13127, 12279, 13274, 13471, 14291])),
+				[35, 25, 0, 40, 55, 35, 55, 70, 60, 40])),
 			$elm$core$Array$fromList(
 			_List_fromArray(
-				[1509, 420, 2109, 0, 760, 3133, 2015, 3801, 2252, 2916, 4719, 2984, 3608, 4376, 6618, 4808, 7090, 6043, 6557, 5717, 6130, 7205, 6987, 6771, 6698, 6836, 7237, 7024, 7392, 7416, 7586, 8561, 8020, 8508, 8615, 8503, 9527, 8985, 9035, 10097, 10028, 10264, 11368, 10520, 11516, 11844, 12533])),
+				[70, 50, 40, 0, 45, 25, 55, 25, 35, 40])),
 			$elm$core$Array$fromList(
 			_List_fromArray(
-				[2005, 1180, 1358, 760, 0, 2484, 2714, 3395, 1986, 3615, 4313, 2712, 4306, 5074, 6211, 4714, 6775, 6741, 7256, 6062, 6531, 7893, 7638, 7172, 7099, 7181, 7800, 7425, 7737, 7817, 7987, 8973, 8421, 8909, 9016, 8904, 9928, 9386, 9436, 10498, 10429, 10665, 11769, 10921, 11917, 12114, 12934])),
+				[30, 45, 55, 45, 0, 50, 30, 70, 35, 50])),
 			$elm$core$Array$fromList(
 			_List_fromArray(
-				[2475, 3507, 1127, 3133, 2484, 0, 4782, 910, 4471, 5922, 1829, 5196, 6581, 7384, 3727, 7199, 4291, 8924, 9575, 8547, 9015, 10220, 10120, 9656, 9583, 9666, 10284, 9910, 10222, 10302, 10472, 11458, 10905, 11393, 11500, 11389, 12412, 11870, 11921, 12982, 12913, 13149, 14254, 13405, 14401, 14598, 15418])),
+				[25, 80, 35, 25, 50, 0, 55, 30, 25, 40])),
 			$elm$core$Array$fromList(
 			_List_fromArray(
-				[2706, 1795, 4063, 2015, 2714, 4782, 0, 5450, 3105, 1140, 6298, 3836, 1831, 2602, 7948, 5517, 8241, 4266, 4793, 6132, 6445, 5438, 6132, 6585, 6924, 7251, 6677, 7251, 7807, 7643, 7813, 6805, 8103, 7487, 8038, 8586, 7919, 8479, 9118, 8610, 9169, 10334, 10481, 9250, 10289, 11586, 11704])),
+				[30, 85, 55, 55, 30, 55, 0, 50, 45, 55])),
 			$elm$core$Array$fromList(
 			_List_fromArray(
-				[3143, 4175, 2037, 3801, 3395, 910, 5450, 0, 5375, 6590, 954, 6107, 7249, 8052, 2852, 8109, 3416, 9592, 10243, 9457, 9925, 10888, 10788, 10566, 10493, 10576, 11038, 10820, 11132, 11212, 11382, 12255, 11816, 12303, 12411, 12299, 13275, 12780, 12831, 13892, 13824, 14059, 15164, 14316, 15311, 15508, 16328])),
+				[45, 60, 70, 25, 70, 30, 50, 0, 55, 45])),
 			$elm$core$Array$fromList(
 			_List_fromArray(
-				[3706, 2579, 3344, 2252, 1986, 4471, 3105, 5375, 0, 2821, 6293, 750, 2931, 3553, 8191, 2752, 8755, 5263, 5393, 4100, 4568, 5931, 5676, 5209, 5136, 5219, 5838, 5463, 5775, 5855, 6025, 7011, 6459, 6946, 7054, 6942, 7966, 7423, 7474, 8535, 8467, 8702, 9807, 8959, 9954, 10151, 10971])),
+				[65, 40, 60, 35, 35, 25, 45, 55, 0, 60])),
 			$elm$core$Array$fromList(
 			_List_fromArray(
-				[3846, 2771, 4964, 2916, 3615, 5922, 1140, 6590, 2821, 0, 7438, 2713, 691, 1462, 9088, 4388, 9381, 3126, 3652, 4997, 5310, 4298, 4993, 5450, 5790, 6116, 5538, 6116, 6672, 6508, 6678, 5665, 6963, 6347, 6898, 7446, 6778, 7339, 7978, 7469, 8028, 9193, 9341, 8110, 9149, 10446, 10564])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[4062, 5093, 2955, 4719, 4313, 1829, 6298, 954, 6293, 7438, 0, 7025, 8097, 8900, 1898, 9027, 2462, 10440, 11090, 10375, 10844, 11736, 11706, 11485, 11412, 11494, 11956, 11738, 12050, 12130, 12300, 13103, 12734, 13222, 13329, 13217, 14122, 13699, 13749, 14811, 14742, 14978, 16082, 15234, 16230, 16427, 17247])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[4438, 3311, 4070, 2984, 2712, 5196, 3836, 6107, 750, 2713, 7025, 0, 2544, 2867, 8923, 2003, 9487, 4552, 4644, 3351, 3819, 5181, 4926, 4460, 4387, 4469, 5088, 4713, 5025, 5105, 5275, 6261, 5709, 6197, 6304, 6192, 7216, 6674, 6724, 7786, 7717, 7953, 9057, 8209, 9205, 9402, 10222])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[4505, 3462, 5655, 3608, 4306, 6581, 1831, 7249, 2931, 691, 8097, 2544, 0, 1111, 9747, 4061, 10040, 2435, 3300, 4650, 4963, 3944, 4644, 5103, 5442, 5769, 5187, 5769, 6325, 6161, 6331, 5280, 6602, 5974, 6534, 7084, 6087, 6966, 7614, 6778, 7600, 8815, 8912, 7418, 8458, 10017, 10135])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[5308, 4231, 6423, 4376, 5074, 7384, 2602, 8052, 3553, 1462, 8900, 2867, 1111, 0, 10550, 3011, 10843, 1755, 2191, 3542, 3855, 2836, 3535, 3994, 4334, 4661, 4078, 4661, 5217, 5053, 5223, 4203, 5503, 4885, 5438, 5986, 5407, 5877, 6518, 6098, 6566, 7732, 7879, 6738, 7770, 8984, 9102])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[5767, 6895, 4854, 6618, 6211, 3727, 7948, 2852, 8191, 9088, 1898, 8923, 9747, 10550, 0, 10926, 564, 12089, 12740, 12274, 12742, 13386, 13420, 13383, 13310, 13392, 13855, 13636, 13948, 14028, 14198, 14753, 14632, 15039, 15227, 15115, 15772, 15597, 15647, 16463, 16640, 16876, 17980, 17103, 18128, 18325, 19145])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[6262, 5135, 6072, 4808, 4714, 7199, 5517, 8109, 2752, 4388, 9027, 2003, 4061, 3011, 10926, 0, 11490, 2923, 2641, 1348, 1816, 3179, 2924, 2457, 2384, 2467, 3085, 2711, 3023, 3103, 3273, 4259, 3707, 4194, 4301, 4190, 5214, 4671, 4722, 5783, 5714, 5950, 7055, 6206, 7202, 7399, 8219])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[6061, 7188, 5418, 7090, 6775, 4291, 8241, 3416, 8755, 9381, 2462, 9487, 10040, 10843, 564, 11490, 0, 12383, 13034, 12783, 13195, 13679, 13714, 13836, 13763, 13902, 14182, 14090, 14458, 14482, 14652, 15046, 15086, 15332, 15633, 15569, 16066, 16050, 16101, 16757, 17094, 17329, 18434, 17397, 18436, 18889, 19598])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[6848, 5897, 8090, 6043, 6741, 8924, 4266, 9592, 5263, 3126, 10440, 4552, 2435, 1755, 12089, 2923, 12383, 0, 1291, 2757, 3070, 1933, 2634, 3099, 3549, 3876, 3177, 3876, 4432, 4268, 4438, 3269, 4591, 3963, 4523, 5073, 3683, 4955, 5603, 4374, 5569, 6784, 6881, 5014, 6053, 7986, 8104])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[7498, 6412, 8605, 6557, 7256, 9575, 4793, 10243, 5393, 3652, 11090, 4644, 3300, 2191, 12740, 2641, 13034, 1291, 0, 1647, 1847, 655, 1347, 1812, 2292, 2749, 1890, 2638, 3303, 3030, 3198, 2022, 3315, 2697, 3250, 3798, 3234, 3689, 4330, 3925, 4385, 5544, 5698, 4565, 5588, 6802, 6921])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[6961, 5834, 7420, 5717, 6062, 8547, 6132, 9457, 4100, 4997, 10375, 3351, 4650, 3542, 12274, 1348, 12783, 2757, 1647, 0, 536, 1899, 1644, 1177, 1105, 1119, 1806, 1431, 1675, 1823, 1993, 2979, 2427, 2915, 3022, 2910, 3934, 3392, 3442, 4504, 4435, 4662, 5775, 4927, 5922, 6127, 6940])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[7374, 6247, 7888, 6130, 6531, 9015, 6445, 9925, 4568, 5310, 10844, 3819, 4963, 3855, 12742, 1816, 13195, 3070, 1847, 536, 0, 1363, 1108, 641, 568, 916, 1269, 895, 1472, 1287, 1457, 2443, 1890, 2378, 2485, 2374, 3397, 2855, 2906, 3967, 3898, 4134, 5239, 4390, 5386, 5809, 6403])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[8144, 7060, 9251, 7205, 7893, 10220, 5438, 10888, 5931, 4298, 11736, 5181, 3944, 2836, 13386, 3179, 13679, 1933, 655, 1899, 1363, 0, 704, 1171, 1650, 2106, 1247, 1995, 2661, 2387, 2555, 1367, 2672, 2054, 2607, 3155, 2583, 3045, 3687, 3274, 3731, 4900, 5043, 3914, 4934, 6148, 6266])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[7969, 6841, 8996, 6987, 7638, 10120, 6132, 10788, 5676, 4993, 11706, 4926, 4644, 3535, 13420, 2924, 13714, 2634, 1347, 1644, 1108, 704, 0, 467, 960, 1414, 558, 1304, 1970, 1696, 1866, 1577, 1984, 1672, 1919, 2467, 2792, 2510, 2999, 3483, 3474, 4263, 4814, 3933, 4929, 5702, 6010])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[8015, 6887, 8529, 6771, 7172, 9656, 6585, 10566, 5209, 5450, 11485, 4460, 5103, 3994, 13383, 2457, 13836, 3099, 1812, 1177, 641, 1171, 467, 0, 495, 948, 715, 838, 1504, 1230, 1400, 2044, 1521, 2009, 2116, 2004, 3028, 2485, 2536, 3598, 3529, 3871, 4869, 4021, 5016, 5516, 6033])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[7942, 6815, 8456, 6698, 7099, 9583, 6924, 10493, 5136, 5790, 11412, 4387, 5442, 4334, 13310, 2384, 13763, 3549, 2292, 1105, 568, 1650, 960, 495, 0, 457, 701, 347, 1013, 739, 909, 1874, 1322, 1810, 1917, 1806, 2829, 2287, 2337, 3399, 3330, 3586, 4670, 3822, 4818, 5262, 5835])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[8080, 6953, 8539, 6836, 7181, 9666, 7251, 10576, 5219, 6116, 11494, 4469, 5769, 4661, 13392, 2467, 13902, 3876, 2749, 1119, 916, 2106, 1414, 948, 457, 0, 860, 437, 556, 829, 999, 2033, 1481, 1969, 2076, 1964, 2988, 2445, 2496, 3558, 3489, 3543, 4825, 3981, 4976, 5008, 5852])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[8219, 7092, 9157, 7237, 7800, 10284, 6677, 11038, 5838, 5538, 11956, 5088, 5187, 4078, 13855, 3085, 14182, 3177, 1890, 1806, 1269, 1247, 558, 715, 701, 860, 0, 749, 1414, 1140, 1309, 1339, 1426, 1426, 1635, 1909, 2547, 2005, 2441, 3117, 3048, 3706, 4388, 3540, 4536, 5197, 5584])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[8269, 7141, 8783, 7024, 7425, 9910, 7251, 10820, 5463, 6116, 11738, 4713, 5769, 4661, 13636, 2711, 14090, 3876, 2638, 1431, 895, 1995, 1304, 838, 347, 437, 749, 0, 666, 392, 562, 1635, 1083, 1571, 1678, 1566, 2590, 2048, 2098, 3160, 3091, 3239, 4431, 3583, 4579, 4915, 5584])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[8636, 7509, 9095, 7392, 7737, 10222, 7807, 11132, 5775, 6672, 12050, 5025, 6325, 5217, 13948, 3023, 14458, 4432, 3303, 1675, 1472, 2661, 1970, 1504, 1013, 556, 1414, 666, 0, 274, 443, 1625, 1072, 1560, 1667, 1556, 2579, 2037, 2088, 3149, 3080, 2987, 4270, 3572, 4568, 4452, 5296])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[8660, 7533, 9175, 7416, 7817, 10302, 7643, 11212, 5855, 6508, 12130, 5105, 6161, 5053, 14028, 3103, 14482, 4268, 3030, 1823, 1287, 2387, 1696, 1230, 739, 829, 1140, 392, 274, 0, 170, 1350, 798, 1286, 1393, 1281, 2305, 1763, 1813, 2875, 2806, 2847, 4130, 3298, 4294, 4523, 5192])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[8831, 7703, 9345, 7586, 7987, 10472, 7813, 11382, 6025, 6678, 12300, 5275, 6331, 5223, 14198, 3273, 14652, 4438, 3198, 1993, 1457, 2555, 1866, 1400, 909, 999, 1309, 562, 443, 170, 0, 1338, 665, 1172, 1279, 1148, 2191, 1648, 1680, 2761, 2692, 2677, 3960, 3184, 4179, 4352, 5022])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[9511, 8415, 10331, 8561, 8973, 11458, 6805, 12255, 7011, 5665, 13103, 6261, 5280, 4203, 14753, 4259, 15046, 3269, 2022, 2979, 2443, 1367, 1577, 2044, 1874, 2033, 1339, 1635, 1625, 1350, 1338, 0, 1323, 696, 1255, 1805, 1231, 1687, 2335, 1922, 2363, 3541, 3676, 2561, 3567, 4781, 4899])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[9264, 8137, 9779, 8020, 8421, 10905, 8103, 11816, 6459, 6963, 12734, 5709, 6602, 5503, 14632, 3707, 15086, 4591, 3315, 2427, 1890, 2672, 1984, 1521, 1322, 1481, 1426, 1083, 1072, 798, 665, 1323, 0, 628, 735, 483, 1647, 1105, 1015, 2217, 2148, 2350, 3451, 2640, 3636, 3995, 4513])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[9641, 8513, 10266, 8508, 8909, 11393, 7487, 12303, 6946, 6347, 13222, 6197, 5974, 4885, 15039, 4194, 15332, 3963, 2697, 2915, 2378, 2054, 1672, 2009, 1810, 1969, 1426, 1571, 1560, 1286, 1172, 696, 628, 0, 560, 1109, 1143, 992, 1640, 1832, 1824, 2846, 3164, 2262, 3258, 4156, 4360])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[9854, 8727, 10374, 8615, 9016, 11500, 8038, 12411, 7054, 6898, 13329, 6304, 6534, 5438, 15227, 4301, 15633, 4523, 3250, 3022, 2485, 2607, 1919, 2116, 1917, 2076, 1635, 1678, 1667, 1393, 1279, 1255, 735, 560, 0, 550, 912, 591, 1081, 1595, 1566, 2345, 2906, 2025, 3021, 3784, 4102])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[9748, 8620, 10262, 8503, 8904, 11389, 8586, 12299, 6942, 7446, 13217, 6192, 7084, 5986, 15115, 4190, 15569, 5073, 3798, 2910, 2374, 3155, 2467, 2004, 1806, 1964, 1909, 1566, 1556, 1281, 1148, 1805, 483, 1109, 550, 0, 1462, 769, 532, 1881, 1812, 1867, 2968, 2304, 3300, 3512, 4029])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[10530, 9550, 11286, 9527, 9928, 12412, 7919, 13275, 7966, 6778, 14122, 7216, 6087, 5407, 15772, 5214, 16066, 3683, 3234, 3934, 3397, 2583, 2792, 3028, 2829, 2988, 2547, 2590, 2579, 2305, 2191, 1231, 1647, 1143, 912, 1462, 0, 1342, 1990, 691, 1941, 3156, 3253, 1331, 2371, 4358, 4422])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[10224, 9096, 10743, 8985, 9386, 11870, 8479, 12780, 7423, 7339, 13699, 6674, 6966, 5877, 15597, 4671, 16050, 4955, 3689, 3392, 2855, 3045, 2510, 2485, 2287, 2445, 2005, 2048, 2037, 1763, 1648, 1687, 1105, 992, 591, 769, 1342, 0, 648, 1112, 1043, 1883, 2383, 1535, 2531, 3193, 3579])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[10279, 9152, 10794, 9035, 9436, 11921, 9118, 12831, 7474, 7978, 13749, 6724, 7614, 6518, 15647, 4722, 16101, 5603, 4330, 3442, 2906, 3687, 2999, 2536, 2337, 2496, 2441, 2098, 2088, 1813, 1680, 2335, 1015, 1640, 1081, 532, 1990, 648, 0, 1646, 1381, 1335, 2436, 1905, 2900, 2980, 3498])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[11221, 10209, 11855, 10097, 10498, 12982, 8610, 13892, 8535, 7469, 14811, 7786, 6778, 6098, 16463, 5783, 16757, 4374, 3925, 4504, 3967, 3274, 3483, 3598, 3399, 3558, 3117, 3160, 3149, 2875, 2761, 1922, 2217, 1832, 1595, 1881, 691, 1112, 1646, 0, 1419, 2634, 2732, 808, 1680, 3836, 3900])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[11267, 10140, 11787, 10028, 10429, 12913, 9169, 13824, 8467, 8028, 14742, 7717, 7600, 6566, 16640, 5714, 17094, 5569, 4385, 4435, 3898, 3731, 3474, 3529, 3330, 3489, 3048, 3091, 3080, 2806, 2692, 2363, 2148, 1824, 1566, 1812, 1941, 1043, 1381, 1419, 0, 1216, 1340, 939, 1635, 2417, 2536])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[11508, 10380, 12022, 10264, 10665, 13149, 10334, 14059, 8702, 9193, 14978, 7953, 8815, 7732, 16876, 5950, 17329, 6784, 5544, 4662, 4134, 4900, 4263, 3871, 3586, 3543, 3706, 3239, 2987, 2847, 2677, 3541, 2350, 2846, 2345, 1867, 3156, 1883, 1335, 2634, 1216, 0, 1284, 1995, 2110, 1675, 2346])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[12607, 11480, 13127, 11368, 11769, 14254, 10481, 15164, 9807, 9341, 16082, 9057, 8912, 7879, 17980, 7055, 18434, 6881, 5698, 5775, 5239, 5043, 4814, 4869, 4670, 4825, 4388, 4431, 4270, 4130, 3960, 3676, 3451, 3164, 2906, 2968, 3253, 2383, 2436, 2732, 1340, 1284, 0, 1998, 1385, 1202, 1320])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[11759, 10632, 12279, 10520, 10921, 13405, 9250, 14316, 8959, 8110, 15234, 8209, 7418, 6738, 17103, 6206, 17397, 5014, 4565, 4927, 4390, 3914, 3933, 4021, 3822, 3981, 3540, 3583, 3572, 3298, 3184, 2561, 2640, 2262, 2025, 2304, 1331, 1535, 1905, 808, 939, 1995, 1998, 0, 1054, 3119, 3091])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[12755, 11627, 13274, 11516, 11917, 14401, 10289, 15311, 9954, 9149, 16230, 9205, 8458, 7770, 18128, 7202, 18436, 6053, 5588, 5922, 5386, 4934, 4929, 5016, 4818, 4976, 4536, 4579, 4568, 4294, 4179, 3567, 3636, 3258, 3021, 3300, 2371, 2531, 2900, 1680, 1635, 2110, 1385, 1054, 0, 2484, 2366])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[13088, 11961, 13471, 11844, 12114, 14598, 11586, 15508, 10151, 10446, 16427, 9402, 10017, 8984, 18325, 7399, 18889, 7986, 6802, 6127, 5809, 6148, 5702, 5516, 5262, 5008, 5197, 4915, 4452, 4523, 4352, 4781, 3995, 4156, 3784, 3512, 4358, 3193, 2980, 3836, 2417, 1675, 1202, 3119, 2484, 0, 866])),
-			$elm$core$Array$fromList(
-			_List_fromArray(
-				[13777, 12650, 14291, 12533, 12934, 15418, 11704, 16328, 10971, 10564, 17247, 10222, 10135, 9102, 19145, 8219, 19598, 8104, 6921, 6940, 6403, 6266, 6010, 6033, 5835, 5852, 5584, 5584, 5296, 5192, 5022, 4899, 4513, 4360, 4102, 4029, 4422, 3579, 3498, 3900, 2536, 2346, 1320, 3091, 2366, 866, 0]))
+				[45, 45, 40, 40, 50, 40, 55, 45, 60, 0]))
 		]));
-var $elm$core$Basics$round = _Basics_round;
-var $author$project$Mctrot$travelTime = F3(
-	function (metersPerMinute, from, to) {
-		return $elm$core$Basics$round(
-			function (meters) {
-				return meters / metersPerMinute;
-			}(
-				A2(
-					$elm$core$Maybe$withDefault,
-					0,
-					A2(
-						$elm$core$Maybe$andThen,
-						$elm$core$Array$get(to),
-						A2($elm$core$Array$get, from, $author$project$Mctrot$distanceMeters)))));
-	});
-var $elm$core$List$any = F2(
-	function (isOkay, list) {
-		any:
-		while (true) {
-			if (!list.b) {
-				return false;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				if (isOkay(x)) {
-					return true;
-				} else {
-					var $temp$isOkay = isOkay,
-						$temp$list = xs;
-					isOkay = $temp$isOkay;
-					list = $temp$list;
-					continue any;
-				}
-			}
-		}
-	});
-var $elm$core$Basics$min = F2(
-	function (x, y) {
-		return (_Utils_cmp(x, y) < 0) ? x : y;
-	});
-var $elm$core$List$minimum = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(
-			A3($elm$core$List$foldl, $elm$core$Basics$min, x, xs));
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $author$project$Mctrot$weekMinute = F2(
-	function (startTime, arrival) {
-		return A2($elm$core$Basics$modBy, $author$project$Mctrot$weekLength, ((startTime.weekday * $author$project$Mctrot$dayLength) + startTime.minutes) + arrival);
-	});
-var $author$project$Mctrot$waitForCity = F3(
-	function (openWindows, startTime, arrival) {
-		var wm = A2($author$project$Mctrot$weekMinute, startTime, arrival);
-		var isOpenNow = A2(
-			$elm$core$List$any,
-			function (_v1) {
-				var s = _v1.a;
-				var e = _v1.b;
-				return (_Utils_cmp(wm, s) > -1) && (_Utils_cmp(wm, e) < 0);
-			},
-			openWindows);
-		return isOpenNow ? 0 : A2(
-			$elm$core$Maybe$withDefault,
-			0,
-			$elm$core$List$minimum(
-				A2(
-					$elm$core$List$map,
-					function (_v0) {
-						var s = _v0.a;
-						return A2($elm$core$Basics$modBy, $author$project$Mctrot$weekLength, s - wm);
-					},
-					openWindows)));
-	});
-var $author$project$Mctrot$simulate = F2(
-	function (startTime, tour) {
-		if (!tour.b) {
-			return _List_Nil;
-		} else {
-			var first = tour.a;
-			var rest = tour.b;
-			var visitCity = F2(
-				function (_v2, cityIndex) {
-					var prevCity = _v2.a;
-					var clock = _v2.b;
-					var visits = _v2.c;
-					var arrival = clock + A3($author$project$Mctrot$travelTime, startTime.metersPerMinute, prevCity, cityIndex);
-					var wait = A3(
-						$author$project$Mctrot$waitForCity,
-						$author$project$Mctrot$openWindowsFor(cityIndex),
-						startTime,
-						arrival - startTime.minutes);
-					var departure = arrival + wait;
-					return _Utils_Tuple3(
-						cityIndex,
-						departure,
-						A2(
-							$elm$core$List$cons,
-							{arrival: arrival, cityIndex: cityIndex, departure: departure, wait: wait},
-							visits));
-				});
-			var firstWait = A3(
-				$author$project$Mctrot$waitForCity,
-				$author$project$Mctrot$openWindowsFor(first),
-				startTime,
-				0);
-			var firstVisit = {arrival: startTime.minutes, cityIndex: first, departure: startTime.minutes + firstWait, wait: firstWait};
-			var _v1 = A3(
-				$elm$core$List$foldl,
-				F2(
-					function (c, acc) {
-						return A2(visitCity, acc, c);
-					}),
-				_Utils_Tuple3(first, firstVisit.departure, _List_Nil),
-				_Utils_ap(
-					rest,
-					_List_fromArray(
-						[$author$project$Mctrot$endIndex])));
-			var reversedVisits = _v1.c;
-			return A2(
-				$elm$core$List$cons,
-				firstVisit,
-				$elm$core$List$reverse(reversedVisits));
-		}
-	});
-var $author$project$Mctrot$totalMinutes = F2(
-	function (startTime, tour) {
+var $author$project$TimeWindows$travelTime = F2(
+	function (from, to) {
 		return A2(
 			$elm$core$Maybe$withDefault,
 			0,
 			A2(
-				$elm$core$Maybe$map,
-				function (v) {
-					return v.departure - startTime.minutes;
-				},
-				$elm_community$list_extra$List$Extra$last(
-					A2($author$project$Mctrot$simulate, startTime, tour))));
+				$elm$core$Maybe$andThen,
+				$elm$core$Array$get(to),
+				A2($elm$core$Array$get, from, $author$project$TimeWindows$costMatrix)));
+	});
+var $author$project$TimeWindows$dayLength = 24 * 60;
+var $elm$core$Basics$modBy = _Basics_modBy;
+var $author$project$TimeWindows$windowClose = 17 * 60;
+var $author$project$TimeWindows$windowOpen = 8 * 60;
+var $author$project$TimeWindows$waitUntilOpen = function (arrival) {
+	var clock = A2($elm$core$Basics$modBy, $author$project$TimeWindows$dayLength, arrival);
+	return (_Utils_cmp(clock, $author$project$TimeWindows$windowOpen) < 0) ? ($author$project$TimeWindows$windowOpen - clock) : ((_Utils_cmp(clock, $author$project$TimeWindows$windowClose) < 0) ? 0 : (($author$project$TimeWindows$dayLength - clock) + $author$project$TimeWindows$windowOpen));
+};
+var $author$project$TimeWindows$simulate = function (tour) {
+	var visitCity = F2(
+		function (_v1, cityIndex) {
+			var prevCity = _v1.a;
+			var clock = _v1.b;
+			var visits = _v1.c;
+			var arrival = clock + A2($author$project$TimeWindows$travelTime, prevCity, cityIndex);
+			var wait = $author$project$TimeWindows$cityIsWindowed(cityIndex) ? $author$project$TimeWindows$waitUntilOpen(arrival) : 0;
+			var departure = arrival + wait;
+			return _Utils_Tuple3(
+				cityIndex,
+				departure,
+				A2(
+					$elm$core$List$cons,
+					{arrival: arrival, cityIndex: cityIndex, departure: departure, wait: wait},
+					visits));
+		});
+	var depotStart = {arrival: $author$project$TimeWindows$startTime, cityIndex: $author$project$TimeWindows$depotIndex, departure: $author$project$TimeWindows$startTime, wait: 0};
+	var _v0 = A3(
+		$elm$core$List$foldl,
+		F2(
+			function (c, acc) {
+				return A2(visitCity, acc, c);
+			}),
+		_Utils_Tuple3($author$project$TimeWindows$depotIndex, $author$project$TimeWindows$startTime, _List_Nil),
+		tour);
+	var lastCity = _v0.a;
+	var lastDeparture = _v0.b;
+	var reversedVisits = _v0.c;
+	var returnArrival = lastDeparture + A2($author$project$TimeWindows$travelTime, lastCity, $author$project$TimeWindows$depotIndex);
+	var depotReturn = {arrival: returnArrival, cityIndex: $author$project$TimeWindows$depotIndex, departure: returnArrival, wait: 0};
+	return A2(
+		$elm$core$List$cons,
+		depotStart,
+		_Utils_ap(
+			$elm$core$List$reverse(reversedVisits),
+			_List_fromArray(
+				[depotReturn])));
+};
+var $author$project$TimeWindows$totalMinutes = function (tour) {
+	return A2(
+		$elm$core$Maybe$withDefault,
+		0,
+		A2(
+			$elm$core$Maybe$map,
+			function (v) {
+				return v.departure - $author$project$TimeWindows$startTime;
+			},
+			$elm_community$list_extra$List$Extra$last(
+				$author$project$TimeWindows$simulate(tour))));
+};
+var $elm$core$Basics$min = F2(
+	function (x, y) {
+		return (_Utils_cmp(x, y) < 0) ? x : y;
 	});
 var $elm$random$Random$map2 = F3(
 	function (func, _v0, _v1) {
@@ -6621,6 +5755,27 @@ var $elm$random$Random$pair = F2(
 				}),
 			genA,
 			genB);
+	});
+var $elm$core$List$drop = F2(
+	function (n, list) {
+		drop:
+		while (true) {
+			if (n <= 0) {
+				return list;
+			} else {
+				if (!list.b) {
+					return list;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs;
+					n = $temp$n;
+					list = $temp$list;
+					continue drop;
+				}
+			}
+		}
 	});
 var $elm$core$List$takeReverse = F3(
 	function (n, list, kept) {
@@ -6754,7 +5909,7 @@ var $elm_community$list_extra$List$Extra$splitAt = F2(
 			A2($elm$core$List$take, n, xs),
 			A2($elm$core$List$drop, n, xs));
 	});
-var $author$project$Mctrot$twoOptNeighbor = function (tour) {
+var $author$project$TimeWindows$twoOptNeighbor = function (tour) {
 	var n = $elm$core$List$length(tour);
 	return A2(
 		$elm$random$Random$map,
@@ -6784,17 +5939,12 @@ var $author$project$Mctrot$twoOptNeighbor = function (tour) {
 			A2($elm$random$Random$int, 0, n - 1),
 			A2($elm$random$Random$int, 0, n - 1)));
 };
-var $author$project$Mctrot$config = function (startTime) {
-	return {
-		energy: A2(
-			$elm$core$Basics$composeL,
-			$elm$core$Basics$toFloat,
-			$author$project$Mctrot$totalMinutes(startTime)),
-		neighbor: $author$project$Mctrot$twoOptNeighbor,
-		stoppingTemperature: 0.05,
-		temperature: $author$project$SimulatedAnnealing$Schedule$exponential(
-			{alpha: 0.9999, initial: 400})
-	};
+var $author$project$TimeWindows$config = {
+	energy: A2($elm$core$Basics$composeL, $elm$core$Basics$toFloat, $author$project$TimeWindows$totalMinutes),
+	neighbor: $author$project$TimeWindows$twoOptNeighbor,
+	stoppingTemperature: 0.05,
+	temperature: $author$project$SimulatedAnnealing$Schedule$exponential(
+		{alpha: 0.999, initial: 400})
 };
 var $author$project$SimulatedAnnealing$isDone = F2(
 	function (config, _v0) {
@@ -6931,16 +6081,13 @@ var $elm$browser$Browser$AnimationManager$onAnimationFrame = function (tagger) {
 		$elm$browser$Browser$AnimationManager$Time(tagger));
 };
 var $elm$browser$Browser$Events$onAnimationFrame = $elm$browser$Browser$AnimationManager$onAnimationFrame;
-var $author$project$Mctrot$subscriptions = function (model) {
+var $author$project$TimeWindows$subscriptions = function (model) {
 	var _v0 = model.saState;
 	if (_v0.$ === 'Just') {
 		var state = _v0.a;
-		return (model.running && (!A2(
-			$author$project$SimulatedAnnealing$isDone,
-			$author$project$Mctrot$config(model.activeStart),
-			state))) ? $elm$browser$Browser$Events$onAnimationFrame(
+		return (model.running && (!A2($author$project$SimulatedAnnealing$isDone, $author$project$TimeWindows$config, state))) ? $elm$browser$Browser$Events$onAnimationFrame(
 			function (_v1) {
-				return $author$project$Mctrot$Tick;
+				return $author$project$TimeWindows$Tick;
 			}) : $elm$core$Platform$Sub$none;
 	} else {
 		return $elm$core$Platform$Sub$none;
@@ -6955,20 +6102,7 @@ var $author$project$SimulatedAnnealing$init = F3(
 		return $author$project$SimulatedAnnealing$State(
 			{best: initial, bestEnergy: e, current: initial, currentEnergy: e, iteration: 0, seed: seed});
 	});
-var $elm$core$Array$length = function (_v0) {
-	var len = _v0.a;
-	return len;
-};
-var $elm$core$Basics$neq = _Utils_notEqual;
-var $author$project$Mctrot$initialTour = A2(
-	$elm$core$List$filter,
-	function (i) {
-		return !_Utils_eq(i, $author$project$Mctrot$endIndex);
-	},
-	A2(
-		$elm$core$List$range,
-		0,
-		$elm$core$Array$length($author$project$Mctrot$cities) - 1));
+var $author$project$TimeWindows$initialTour = A2($elm$core$List$range, 1, 9);
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$SimulatedAnnealing$eulersNumber = 2.718281828459045;
@@ -7039,29 +6173,18 @@ var $author$project$SimulatedAnnealing$stepN = F3(
 			}
 		}
 	});
-var $author$project$Mctrot$update = F2(
+var $author$project$TimeWindows$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
 			case 'GotSeed':
 				var seed = msg.a;
-				var activeStart = {
-					metersPerMinute: $author$project$Mctrot$metersPerMinuteFromPace(
-						$author$project$Mctrot$parseMinutesPerMile(model.speedInput)),
-					minutes: $author$project$Mctrot$parseStartMinutes(model.startTimeOfDay),
-					weekday: $author$project$Mctrot$mondayIndexedWeekday(model.startDate)
-				};
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{
-							activeStart: activeStart,
 							running: false,
 							saState: $elm$core$Maybe$Just(
-								A3(
-									$author$project$SimulatedAnnealing$init,
-									$author$project$Mctrot$config(activeStart),
-									seed,
-									$author$project$Mctrot$initialTour))
+								A3($author$project$SimulatedAnnealing$init, $author$project$TimeWindows$config, seed, $author$project$TimeWindows$initialTour))
 						}),
 					$elm$core$Platform$Cmd$none);
 			case 'Tick':
@@ -7075,11 +6198,7 @@ var $author$project$Mctrot$update = F2(
 							model,
 							{
 								saState: $elm$core$Maybe$Just(
-									A3(
-										$author$project$SimulatedAnnealing$stepN,
-										$author$project$Mctrot$config(model.activeStart),
-										model.stepsPerFrame,
-										state))
+									A3($author$project$SimulatedAnnealing$stepN, $author$project$TimeWindows$config, model.stepsPerFrame, state))
 							}),
 						$elm$core$Platform$Cmd$none);
 				}
@@ -7095,38 +6214,17 @@ var $author$project$Mctrot$update = F2(
 						model,
 						{running: !model.running}),
 					$elm$core$Platform$Cmd$none);
-			case 'Restart':
+			default:
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{running: false, saState: $elm$core$Maybe$Nothing, started: false}),
-					A2($elm$random$Random$generate, $author$project$Mctrot$GotSeed, $elm$random$Random$independentSeed));
-			case 'SetStartDate':
-				var date = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{startDate: date}),
-					$elm$core$Platform$Cmd$none);
-			case 'SetStartTimeOfDay':
-				var timeOfDay = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{startTimeOfDay: timeOfDay}),
-					$elm$core$Platform$Cmd$none);
-			default:
-				var speed = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{speedInput: speed}),
-					$elm$core$Platform$Cmd$none);
+					A2($elm$random$Random$generate, $author$project$TimeWindows$GotSeed, $elm$random$Random$independentSeed));
 		}
 	});
-var $author$project$Mctrot$Restart = {$: 'Restart'};
-var $author$project$Mctrot$Start = {$: 'Start'};
-var $author$project$Mctrot$ToggleRunning = {$: 'ToggleRunning'};
+var $author$project$TimeWindows$Restart = {$: 'Restart'};
+var $author$project$TimeWindows$Start = {$: 'Start'};
+var $author$project$TimeWindows$ToggleRunning = {$: 'ToggleRunning'};
 var $author$project$SimulatedAnnealing$bestEnergy = function (_v0) {
 	var s = _v0.a;
 	return s.bestEnergy;
@@ -7162,10 +6260,11 @@ var $elm$html$Html$Attributes$boolProperty = F2(
 	});
 var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
 var $elm$html$Html$div = _VirtualDom_node('div');
-var $author$project$Mctrot$formatDuration = function (minutes) {
+var $author$project$TimeWindows$formatDuration = function (minutes) {
 	return $elm$core$String$fromInt((minutes / 60) | 0) + ('h ' + ($elm$core$String$fromInt(
 		A2($elm$core$Basics$modBy, 60, minutes)) + 'm'));
 };
+var $elm$core$String$fromFloat = _String_fromNumber;
 var $elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
 var $author$project$SimulatedAnnealing$iteration = function (_v0) {
 	var s = _v0.a;
@@ -7193,7 +6292,7 @@ var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
-var $author$project$Mctrot$readout = F2(
+var $author$project$TimeWindows$readout = F2(
 	function (label, value) {
 		return A2(
 			$elm$html$Html$div,
@@ -7223,7 +6322,8 @@ var $author$project$Mctrot$readout = F2(
 						]))
 				]));
 	});
-var $author$project$Mctrot$rowHeight = 34;
+var $elm$core$Basics$round = _Basics_round;
+var $author$project$TimeWindows$rowHeight = 34;
 var $elm$html$Html$summary = _VirtualDom_node('summary');
 var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
 var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
@@ -7232,8 +6332,8 @@ var $author$project$SimulatedAnnealing$temperature = F2(
 		var s = _v0.a;
 		return config.temperature(s.iteration);
 	});
-var $author$project$Mctrot$timelineWidth = 760;
-var $author$project$Mctrot$matrixCell = _List_fromArray(
+var $author$project$TimeWindows$timelineWidth = 760;
+var $author$project$TimeWindows$matrixCell = _List_fromArray(
 	[
 		A2($elm$html$Html$Attributes$style, 'border', '1px solid #ddd'),
 		A2($elm$html$Html$Attributes$style, 'padding', '2px 6px'),
@@ -7243,20 +6343,20 @@ var $elm$html$Html$table = _VirtualDom_node('table');
 var $elm$html$Html$td = _VirtualDom_node('td');
 var $elm$html$Html$th = _VirtualDom_node('th');
 var $elm$html$Html$tr = _VirtualDom_node('tr');
-var $author$project$Mctrot$viewCostMatrix = function (metersPerMinute) {
-	var cityList = $elm$core$Array$toList($author$project$Mctrot$cities);
+var $author$project$TimeWindows$viewCostMatrix = function () {
+	var cityList = $elm$core$Array$toList($author$project$TimeWindows$cities);
 	var headerRow = A2(
 		$elm$html$Html$tr,
 		_List_Nil,
 		A2(
 			$elm$core$List$cons,
-			A2($elm$html$Html$th, $author$project$Mctrot$matrixCell, _List_Nil),
+			A2($elm$html$Html$th, $author$project$TimeWindows$matrixCell, _List_Nil),
 			A2(
 				$elm$core$List$map,
 				function (c) {
 					return A2(
 						$elm$html$Html$th,
-						$author$project$Mctrot$matrixCell,
+						$author$project$TimeWindows$matrixCell,
 						_List_fromArray(
 							[
 								$elm$html$Html$text(c.name)
@@ -7272,7 +6372,7 @@ var $author$project$Mctrot$viewCostMatrix = function (metersPerMinute) {
 					$elm$core$List$cons,
 					A2(
 						$elm$html$Html$th,
-						$author$project$Mctrot$matrixCell,
+						$author$project$TimeWindows$matrixCell,
 						_List_fromArray(
 							[
 								$elm$html$Html$text(city.name)
@@ -7283,12 +6383,12 @@ var $author$project$Mctrot$viewCostMatrix = function (metersPerMinute) {
 							function (j, _v0) {
 								return A2(
 									$elm$html$Html$td,
-									$author$project$Mctrot$matrixCell,
+									$author$project$TimeWindows$matrixCell,
 									_List_fromArray(
 										[
 											$elm$html$Html$text(
 											_Utils_eq(i, j) ? '—' : $elm$core$String$fromInt(
-												A3($author$project$Mctrot$travelTime, metersPerMinute, i, j)))
+												A2($author$project$TimeWindows$travelTime, i, j)))
 										]));
 							}),
 						cityList)));
@@ -7306,12 +6406,7 @@ var $author$project$Mctrot$viewCostMatrix = function (metersPerMinute) {
 			$elm$core$List$cons,
 			headerRow,
 			A2($elm$core$List$indexedMap, bodyRow, cityList)));
-};
-var $elm$core$List$concatMap = F2(
-	function (f, list) {
-		return $elm$core$List$concat(
-			A2($elm$core$List$map, f, list));
-	});
+}();
 var $elm$core$List$maybeCons = F3(
 	function (f, mx, xs) {
 		var _v0 = f(mx);
@@ -7330,34 +6425,27 @@ var $elm$core$List$filterMap = F2(
 			_List_Nil,
 			xs);
 	});
-var $author$project$Mctrot$closedBandsElapsed = F3(
-	function (closedInWeek, startTime, viewMax) {
-		var weekOffset = (startTime.weekday * $author$project$Mctrot$dayLength) + startTime.minutes;
-		var maxK = ((viewMax / $author$project$Mctrot$weekLength) | 0) + 2;
-		return A2(
-			$elm$core$List$filterMap,
-			function (_v1) {
-				var s = _v1.a;
-				var e = _v1.b;
-				return ((e < 0) || (_Utils_cmp(s, viewMax) > 0)) ? $elm$core$Maybe$Nothing : $elm$core$Maybe$Just(
-					_Utils_Tuple2(
-						A2($elm$core$Basics$max, 0, s),
-						A2($elm$core$Basics$min, viewMax, e)));
+var $author$project$TimeWindows$closedBands = function (viewMax) {
+	var maxK = ((viewMax / $author$project$TimeWindows$dayLength) | 0) + 2;
+	var firstOpenStart = A2($elm$core$Basics$modBy, $author$project$TimeWindows$dayLength, $author$project$TimeWindows$windowOpen - $author$project$TimeWindows$startTime);
+	var closedLength = $author$project$TimeWindows$dayLength - ($author$project$TimeWindows$windowClose - $author$project$TimeWindows$windowOpen);
+	return A2(
+		$elm$core$List$filterMap,
+		function (_v0) {
+			var s = _v0.a;
+			var e = _v0.b;
+			return ((e < 0) || (_Utils_cmp(s, viewMax) > 0)) ? $elm$core$Maybe$Nothing : $elm$core$Maybe$Just(
+				_Utils_Tuple2(
+					A2($elm$core$Basics$max, 0, s),
+					A2($elm$core$Basics$min, viewMax, e)));
+		},
+		A2(
+			$elm$core$List$map,
+			function (k) {
+				return _Utils_Tuple2((firstOpenStart + (k * $author$project$TimeWindows$dayLength)) - closedLength, firstOpenStart + (k * $author$project$TimeWindows$dayLength));
 			},
-			A2(
-				$elm$core$List$concatMap,
-				function (k) {
-					return A2(
-						$elm$core$List$map,
-						function (_v0) {
-							var s = _v0.a;
-							var e = _v0.b;
-							return _Utils_Tuple2((s - weekOffset) + (k * $author$project$Mctrot$weekLength), (e - weekOffset) + (k * $author$project$Mctrot$weekLength));
-						},
-						closedInWeek);
-				},
-				A2($elm$core$List$range, 0, maxK)));
-	});
+			A2($elm$core$List$range, 0, maxK)));
+};
 var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
 var $elm$svg$Svg$Attributes$fontSize = _VirtualDom_attribute('font-size');
 var $elm$core$String$cons = _String_cons;
@@ -7386,7 +6474,7 @@ var $elm$core$String$padLeft = F3(
 				$elm$core$String$fromChar(_char)),
 			string);
 	});
-var $author$project$Mctrot$formatClock = function (absoluteMinutes) {
+var $author$project$TimeWindows$formatClock = function (absoluteMinutes) {
 	var pad = function (n) {
 		return A3(
 			$elm$core$String$padLeft,
@@ -7394,18 +6482,11 @@ var $author$project$Mctrot$formatClock = function (absoluteMinutes) {
 			_Utils_chr('0'),
 			$elm$core$String$fromInt(n));
 	};
-	var day = (absoluteMinutes / $author$project$Mctrot$dayLength) | 0;
-	var clock = A2($elm$core$Basics$modBy, $author$project$Mctrot$dayLength, absoluteMinutes);
+	var day = (absoluteMinutes / $author$project$TimeWindows$dayLength) | 0;
+	var clock = A2($elm$core$Basics$modBy, $author$project$TimeWindows$dayLength, absoluteMinutes);
 	var hh = (clock / 60) | 0;
 	var mm = A2($elm$core$Basics$modBy, 60, clock);
 	return 'day ' + ($elm$core$String$fromInt(day) + (' ' + (pad(hh) + (':' + pad(mm)))));
-};
-var $elm$core$List$isEmpty = function (xs) {
-	if (!xs.b) {
-		return true;
-	} else {
-		return false;
-	}
 };
 var $elm$svg$Svg$rect = $elm$svg$Svg$trustedNode('rect');
 var $elm$svg$Svg$Attributes$stroke = _VirtualDom_attribute('stroke');
@@ -7413,28 +6494,21 @@ var $elm$svg$Svg$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$svg$Svg$text_ = $elm$svg$Svg$trustedNode('text');
 var $elm$svg$Svg$Attributes$width = _VirtualDom_attribute('width');
 var $elm$svg$Svg$Attributes$x = _VirtualDom_attribute('x');
-var $author$project$Mctrot$xScale = F2(
+var $author$project$TimeWindows$xScale = F2(
 	function (viewMax, elapsedMinutes) {
-		return elapsedMinutes * ($author$project$Mctrot$timelineWidth / viewMax);
+		return elapsedMinutes * ($author$project$TimeWindows$timelineWidth / viewMax);
 	});
 var $elm$svg$Svg$Attributes$y = _VirtualDom_attribute('y');
-var $author$project$Mctrot$viewRow = F4(
-	function (startTime, viewMax, rowIndex, visit) {
-		var y = rowIndex * $author$project$Mctrot$rowHeight;
-		var departureElapsed = visit.departure - startTime.minutes;
+var $author$project$TimeWindows$viewRow = F3(
+	function (viewMax, rowIndex, visit) {
+		var y = rowIndex * $author$project$TimeWindows$rowHeight;
+		var departureElapsed = visit.departure - $author$project$TimeWindows$startTime;
 		var city = A2(
 			$elm$core$Maybe$withDefault,
-			A3(
-				$author$project$Mctrot$City,
-				'?',
-				_List_fromArray(
-					[
-						_Utils_Tuple2(0, $author$project$Mctrot$weekLength)
-					]),
-				_List_Nil),
-			A2($elm$core$Array$get, visit.cityIndex, $author$project$Mctrot$cities));
-		var label = city.name + (' — arr ' + ($author$project$Mctrot$formatClock(visit.arrival) + ((visit.wait > 0) ? (' (waited ' + ($author$project$Mctrot$formatDuration(visit.wait) + ')')) : '')));
-		var arrivalElapsed = visit.arrival - startTime.minutes;
+			A2($author$project$TimeWindows$City, '?', false),
+			A2($elm$core$Array$get, visit.cityIndex, $author$project$TimeWindows$cities));
+		var label = city.name + (' — arr ' + ($author$project$TimeWindows$formatClock(visit.arrival) + ((visit.wait > 0) ? (' (waited ' + ($author$project$TimeWindows$formatDuration(visit.wait) + ')')) : '')));
+		var arrivalElapsed = visit.arrival - $author$project$TimeWindows$startTime;
 		return _Utils_ap(
 			_List_fromArray(
 				[
@@ -7446,16 +6520,16 @@ var $author$project$Mctrot$viewRow = F4(
 							$elm$svg$Svg$Attributes$y(
 							$elm$core$String$fromFloat(y)),
 							$elm$svg$Svg$Attributes$width(
-							$elm$core$String$fromFloat($author$project$Mctrot$timelineWidth)),
+							$elm$core$String$fromFloat($author$project$TimeWindows$timelineWidth)),
 							$elm$svg$Svg$Attributes$height(
-							$elm$core$String$fromFloat($author$project$Mctrot$rowHeight - 4)),
+							$elm$core$String$fromFloat($author$project$TimeWindows$rowHeight - 4)),
 							$elm$svg$Svg$Attributes$fill('#fff'),
 							$elm$svg$Svg$Attributes$stroke('#eee')
 						]),
 					_List_Nil)
 				]),
 			_Utils_ap(
-				(!$elm$core$List$isEmpty(city.closedWindows)) ? A2(
+				city.windowed ? A2(
 					$elm$core$List$map,
 					function (_v0) {
 						var s = _v0.a;
@@ -7466,19 +6540,19 @@ var $author$project$Mctrot$viewRow = F4(
 								[
 									$elm$svg$Svg$Attributes$x(
 									$elm$core$String$fromFloat(
-										A2($author$project$Mctrot$xScale, viewMax, s))),
+										A2($author$project$TimeWindows$xScale, viewMax, s))),
 									$elm$svg$Svg$Attributes$y(
 									$elm$core$String$fromFloat(y)),
 									$elm$svg$Svg$Attributes$width(
 									$elm$core$String$fromFloat(
-										A2($author$project$Mctrot$xScale, viewMax, e - s))),
+										A2($author$project$TimeWindows$xScale, viewMax, e - s))),
 									$elm$svg$Svg$Attributes$height(
-									$elm$core$String$fromFloat($author$project$Mctrot$rowHeight - 4)),
+									$elm$core$String$fromFloat($author$project$TimeWindows$rowHeight - 4)),
 									$elm$svg$Svg$Attributes$fill('#fbdcdc')
 								]),
 							_List_Nil);
 					},
-					A3($author$project$Mctrot$closedBandsElapsed, city.closedWindows, startTime, viewMax)) : _List_Nil,
+					$author$project$TimeWindows$closedBands(viewMax)) : _List_Nil,
 				_List_fromArray(
 					[
 						A2(
@@ -7487,7 +6561,7 @@ var $author$project$Mctrot$viewRow = F4(
 							[
 								$elm$svg$Svg$Attributes$x(
 								$elm$core$String$fromFloat(
-									A2($author$project$Mctrot$xScale, viewMax, arrivalElapsed))),
+									A2($author$project$TimeWindows$xScale, viewMax, arrivalElapsed))),
 								$elm$svg$Svg$Attributes$y(
 								$elm$core$String$fromFloat(y + 6)),
 								$elm$svg$Svg$Attributes$width(
@@ -7495,9 +6569,9 @@ var $author$project$Mctrot$viewRow = F4(
 									A2(
 										$elm$core$Basics$max,
 										2,
-										A2($author$project$Mctrot$xScale, viewMax, departureElapsed - arrivalElapsed)))),
+										A2($author$project$TimeWindows$xScale, viewMax, departureElapsed - arrivalElapsed)))),
 								$elm$svg$Svg$Attributes$height(
-								$elm$core$String$fromFloat($author$project$Mctrot$rowHeight - 16)),
+								$elm$core$String$fromFloat($author$project$TimeWindows$rowHeight - 16)),
 								$elm$svg$Svg$Attributes$fill(
 								(visit.wait > 0) ? '#e8871e' : '#1f6feb')
 							]),
@@ -7508,7 +6582,7 @@ var $author$project$Mctrot$viewRow = F4(
 							[
 								$elm$svg$Svg$Attributes$x('4'),
 								$elm$svg$Svg$Attributes$y(
-								$elm$core$String$fromFloat((y + $author$project$Mctrot$rowHeight) - 8)),
+								$elm$core$String$fromFloat((y + $author$project$TimeWindows$rowHeight) - 8)),
 								$elm$svg$Svg$Attributes$fontSize('11'),
 								$elm$svg$Svg$Attributes$fill('#333')
 							]),
@@ -7518,194 +6592,7 @@ var $author$project$Mctrot$viewRow = F4(
 							]))
 					])));
 	});
-var $author$project$Mctrot$SetSpeedInput = function (a) {
-	return {$: 'SetSpeedInput', a: a};
-};
-var $author$project$Mctrot$SetStartDate = function (a) {
-	return {$: 'SetStartDate', a: a};
-};
-var $author$project$Mctrot$SetStartTimeOfDay = function (a) {
-	return {$: 'SetStartTimeOfDay', a: a};
-};
-var $elm$html$Html$input = _VirtualDom_node('input');
-var $elm$html$Html$label = _VirtualDom_node('label');
-var $elm$json$Json$Encode$string = _Json_wrap;
-var $elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$string(string));
-	});
-var $elm$html$Html$Attributes$min = $elm$html$Html$Attributes$stringProperty('min');
-var $elm$html$Html$Events$alwaysStop = function (x) {
-	return _Utils_Tuple2(x, true);
-};
-var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
-	return {$: 'MayStopPropagation', a: a};
-};
-var $elm$html$Html$Events$stopPropagationOn = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
-	});
-var $elm$json$Json$Decode$field = _Json_decodeField;
-var $elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
-	});
-var $elm$json$Json$Decode$string = _Json_decodeString;
-var $elm$html$Html$Events$targetValue = A2(
-	$elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'value']),
-	$elm$json$Json$Decode$string);
-var $elm$html$Html$Events$onInput = function (tagger) {
-	return A2(
-		$elm$html$Html$Events$stopPropagationOn,
-		'input',
-		A2(
-			$elm$json$Json$Decode$map,
-			$elm$html$Html$Events$alwaysStop,
-			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
-};
-var $elm$html$Html$Attributes$step = function (n) {
-	return A2($elm$html$Html$Attributes$stringProperty, 'step', n);
-};
-var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
-var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
-var $author$project$Mctrot$weekdayName = function (isoDate) {
-	return A2(
-		$elm$core$Maybe$andThen,
-		function (_v0) {
-			var year = _v0.a;
-			var month = _v0.b;
-			var day = _v0.c;
-			return A2(
-				$elm_community$list_extra$List$Extra$getAt,
-				A3($author$project$Mctrot$sakamotoWeekday, year, month, day),
-				_List_fromArray(
-					['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']));
-		},
-		$author$project$Mctrot$parseDate(isoDate));
-};
-var $author$project$Mctrot$viewRunSettings = function (model) {
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				A2($elm$html$Html$Attributes$style, 'display', 'flex'),
-				A2($elm$html$Html$Attributes$style, 'gap', '1rem'),
-				A2($elm$html$Html$Attributes$style, 'align-items', 'flex-end'),
-				A2($elm$html$Html$Attributes$style, 'margin-bottom', '0.75rem')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$label,
-				_List_Nil,
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								A2($elm$html$Html$Attributes$style, 'font-size', '0.75rem'),
-								A2($elm$html$Html$Attributes$style, 'color', '#666')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Start date')
-							])),
-						A2(
-						$elm$html$Html$input,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$type_('date'),
-								$elm$html$Html$Attributes$value(model.startDate),
-								$elm$html$Html$Events$onInput($author$project$Mctrot$SetStartDate)
-							]),
-						_List_Nil)
-					])),
-				A2(
-				$elm$html$Html$label,
-				_List_Nil,
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								A2($elm$html$Html$Attributes$style, 'font-size', '0.75rem'),
-								A2($elm$html$Html$Attributes$style, 'color', '#666')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Start time')
-							])),
-						A2(
-						$elm$html$Html$input,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$type_('time'),
-								$elm$html$Html$Attributes$value(model.startTimeOfDay),
-								$elm$html$Html$Events$onInput($author$project$Mctrot$SetStartTimeOfDay)
-							]),
-						_List_Nil)
-					])),
-				A2(
-				$elm$html$Html$label,
-				_List_Nil,
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								A2($elm$html$Html$Attributes$style, 'font-size', '0.75rem'),
-								A2($elm$html$Html$Attributes$style, 'color', '#666')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Pace (min/mile)')
-							])),
-						A2(
-						$elm$html$Html$input,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$type_('number'),
-								$elm$html$Html$Attributes$step('0.5'),
-								$elm$html$Html$Attributes$min('0.5'),
-								$elm$html$Html$Attributes$value(model.speedInput),
-								$elm$html$Html$Events$onInput($author$project$Mctrot$SetSpeedInput)
-							]),
-						_List_Nil)
-					])),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						A2($elm$html$Html$Attributes$style, 'font-size', '0.8rem'),
-						A2($elm$html$Html$Attributes$style, 'color', '#666')
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text(
-						function () {
-							var _v0 = $author$project$Mctrot$weekdayName(model.startDate);
-							if (_v0.$ === 'Just') {
-								var day = _v0.a;
-								return 'Starts ' + (day + (model.started ? ' (changes apply on restart)' : ''));
-							} else {
-								return 'Pick a valid date';
-							}
-						}())
-					]))
-			]));
-};
-var $author$project$Mctrot$view = function (model) {
+var $author$project$TimeWindows$view = function (model) {
 	var _v0 = model.saState;
 	if (_v0.$ === 'Nothing') {
 		return $elm$html$Html$text('Choosing a starting seed...');
@@ -7715,12 +6602,9 @@ var $author$project$Mctrot$view = function (model) {
 		var viewMax = A2(
 			$elm$core$Basics$max,
 			600,
-			(((A2($author$project$Mctrot$totalMinutes, model.activeStart, tour) / 60) | 0) + 1) * 60);
-		var visits = A2($author$project$Mctrot$simulate, model.activeStart, tour);
-		var done = A2(
-			$author$project$SimulatedAnnealing$isDone,
-			$author$project$Mctrot$config(model.activeStart),
-			state);
+			((($author$project$TimeWindows$totalMinutes(tour) / 60) | 0) + 1) * 60);
+		var visits = $author$project$TimeWindows$simulate(tour);
+		var done = A2($author$project$SimulatedAnnealing$isDone, $author$project$TimeWindows$config, state);
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
@@ -7730,21 +6614,20 @@ var $author$project$Mctrot$view = function (model) {
 				]),
 			_List_fromArray(
 				[
-					$author$project$Mctrot$viewRunSettings(model),
 					A2(
 					$elm$svg$Svg$svg,
 					_List_fromArray(
 						[
 							$elm$svg$Svg$Attributes$width(
-							$elm$core$String$fromFloat($author$project$Mctrot$timelineWidth)),
+							$elm$core$String$fromFloat($author$project$TimeWindows$timelineWidth)),
 							$elm$svg$Svg$Attributes$height(
 							$elm$core$String$fromFloat(
-								($author$project$Mctrot$rowHeight * $elm$core$List$length(visits)) + 10))
+								($author$project$TimeWindows$rowHeight * $elm$core$List$length(visits)) + 10))
 						]),
 					$elm$core$List$concat(
 						A2(
 							$elm$core$List$indexedMap,
-							A2($author$project$Mctrot$viewRow, model.activeStart, viewMax),
+							$author$project$TimeWindows$viewRow(viewMax),
 							visits))),
 					A2(
 					$elm$html$Html$div,
@@ -7757,29 +6640,26 @@ var $author$project$Mctrot$view = function (model) {
 					_List_fromArray(
 						[
 							A2(
-							$author$project$Mctrot$readout,
+							$author$project$TimeWindows$readout,
 							'Iteration',
 							$elm$core$String$fromInt(
 								$author$project$SimulatedAnnealing$iteration(state))),
 							A2(
-							$author$project$Mctrot$readout,
+							$author$project$TimeWindows$readout,
 							'Temperature',
 							$elm$core$String$fromInt(
 								$elm$core$Basics$round(
-									A2(
-										$author$project$SimulatedAnnealing$temperature,
-										$author$project$Mctrot$config(model.activeStart),
-										state)))),
+									A2($author$project$SimulatedAnnealing$temperature, $author$project$TimeWindows$config, state)))),
 							A2(
-							$author$project$Mctrot$readout,
+							$author$project$TimeWindows$readout,
 							'Current route time',
-							$author$project$Mctrot$formatDuration(
+							$author$project$TimeWindows$formatDuration(
 								$elm$core$Basics$round(
 									$author$project$SimulatedAnnealing$currentEnergy(state)))),
 							A2(
-							$author$project$Mctrot$readout,
+							$author$project$TimeWindows$readout,
 							'Best route time',
-							$author$project$Mctrot$formatDuration(
+							$author$project$TimeWindows$formatDuration(
 								$elm$core$Basics$round(
 									$author$project$SimulatedAnnealing$bestEnergy(state))))
 						])),
@@ -7797,7 +6677,7 @@ var $author$project$Mctrot$view = function (model) {
 							$elm$html$Html$button,
 							_List_fromArray(
 								[
-									$elm$html$Html$Events$onClick($author$project$Mctrot$ToggleRunning),
+									$elm$html$Html$Events$onClick($author$project$TimeWindows$ToggleRunning),
 									$elm$html$Html$Attributes$disabled(done)
 								]),
 							_List_fromArray(
@@ -7808,7 +6688,7 @@ var $author$project$Mctrot$view = function (model) {
 							$elm$html$Html$button,
 							_List_fromArray(
 								[
-									$elm$html$Html$Events$onClick($author$project$Mctrot$Start)
+									$elm$html$Html$Events$onClick($author$project$TimeWindows$Start)
 								]),
 							_List_fromArray(
 								[
@@ -7818,7 +6698,7 @@ var $author$project$Mctrot$view = function (model) {
 							$elm$html$Html$button,
 							_List_fromArray(
 								[
-									$elm$html$Html$Events$onClick($author$project$Mctrot$Restart)
+									$elm$html$Html$Events$onClick($author$project$TimeWindows$Restart)
 								]),
 							_List_fromArray(
 								[
@@ -7855,17 +6735,17 @@ var $author$project$Mctrot$view = function (model) {
 								[
 									$elm$html$Html$text('Travel time matrix (minutes)')
 								])),
-							$author$project$Mctrot$viewCostMatrix(model.activeStart.metersPerMinute)
+							$author$project$TimeWindows$viewCostMatrix
 						]))
 				]));
 	}
 };
-var $author$project$Mctrot$main = $elm$browser$Browser$element(
-	{init: $author$project$Mctrot$init, subscriptions: $author$project$Mctrot$subscriptions, update: $author$project$Mctrot$update, view: $author$project$Mctrot$view});
-_Platform_export({'Mctrot':{'init':$author$project$Mctrot$main(
+var $author$project$TimeWindows$main = $elm$browser$Browser$element(
+	{init: $author$project$TimeWindows$init, subscriptions: $author$project$TimeWindows$subscriptions, update: $author$project$TimeWindows$update, view: $author$project$TimeWindows$view});
+_Platform_export({'TimeWindows':{'init':$author$project$TimeWindows$main(
 	$elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});}(this));
 
-  var app = Elm.Mctrot.init({ node: document.getElementById("elm") });
+  var app = Elm.TimeWindows.init({ node: document.getElementById("elm") });
 }
 catch (e)
 {

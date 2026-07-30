@@ -23,7 +23,9 @@ Broadway). Most locations are open 24 hours; a handful have real weekly
 schedules — including days that are fully open, days that close at midnight,
 and one or two nights that run past midnight into the next calendar day —
 and arriving while closed means waiting for the next opening, which the UI's
-start date picker determines (see `weekdayName`).
+start date picker determines (see `weekdayName`). Travel time between stops
+is the raw distance converted at a pace the UI also asks for, in
+minutes/mile (see `travelTime`).
 -}
 
 import Array exposing (Array)
@@ -315,13 +317,16 @@ weekLength =
     7 * dayLength
 
 
-{-| The starting conditions a run is pinned to: which day of the week it
-begins on (Monday-indexed, 0..6) and what time of day. Bundled together
-because every place that needs one needs the other.
+{-| The conditions a run is pinned to: which day of the week it begins on
+(Monday-indexed, 0..6), what time of day, and how fast travel between
+stops is. Bundled together because they're all snapshotted at the same
+moment — when a search (re)starts — so the energy function stays fixed for
+the life of that search.
 -}
 type alias StartTime =
     { weekday : Int
     , minutes : Int
+    , metersPerMinute : Float
     }
 
 
@@ -399,7 +404,7 @@ simulate startTime tour =
                 visitCity ( prevCity, clock, visits ) cityIndex =
                     let
                         arrival =
-                            clock + travelTime prevCity cityIndex
+                            clock + travelTime startTime.metersPerMinute prevCity cityIndex
 
                         wait =
                             waitForCity (openWindowsFor cityIndex) startTime (arrival - startTime.minutes)
@@ -489,6 +494,7 @@ type alias Model =
     , stepsPerFrame : Int
     , startDate : String
     , startTimeOfDay : String
+    , speedInput : String
     , activeStart : StartTime
     }
 
@@ -501,17 +507,27 @@ type Msg
     | Restart
     | SetStartDate String
     | SetStartTimeOfDay String
+    | SetSpeedInput String
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
+    let
+        speedInput =
+            String.fromFloat defaultMinutesPerMile
+    in
     ( { saState = Nothing
       , running = False
       , started = False
       , stepsPerFrame = 30
       , startDate = "2025-01-06"
       , startTimeOfDay = "06:00"
-      , activeStart = { weekday = mondayIndexedWeekday "2025-01-06", minutes = parseStartMinutes "06:00" }
+      , speedInput = speedInput
+      , activeStart =
+            { weekday = mondayIndexedWeekday "2025-01-06"
+            , minutes = parseStartMinutes "06:00"
+            , metersPerMinute = metersPerMinuteFromPace (parseMinutesPerMile speedInput)
+            }
       }
     , Random.generate GotSeed Random.independentSeed
     )
@@ -529,6 +545,7 @@ update msg model =
                 activeStart =
                     { weekday = mondayIndexedWeekday model.startDate
                     , minutes = parseStartMinutes model.startTimeOfDay
+                    , metersPerMinute = metersPerMinuteFromPace (parseMinutesPerMile model.speedInput)
                     }
             in
             ( { model
@@ -563,6 +580,9 @@ update msg model =
 
         SetStartTimeOfDay timeOfDay ->
             ( { model | startTimeOfDay = timeOfDay }, Cmd.none )
+
+        SetSpeedInput speed ->
+            ( { model | speedInput = speed }, Cmd.none )
 
 
 
@@ -618,7 +638,7 @@ view model =
                     max 600 (((totalMinutes model.activeStart tour // 60) + 1) * 60)
             in
             Html.div [ Attr.style "font-family" "sans-serif", Attr.style "max-width" "800px" ]
-                [ viewStartPicker model
+                [ viewRunSettings model
                 , Svg.svg
                     [ SvgAttr.width (String.fromFloat timelineWidth)
                     , SvgAttr.height (String.fromFloat (rowHeight * toFloat (List.length visits) + 10))
@@ -654,20 +674,22 @@ view model =
                 , Html.details [ Attr.style "margin-top" "0.5rem" ]
                     [ Html.summary [ Attr.style "cursor" "pointer", Attr.style "color" "#666" ]
                         [ Html.text "Travel time matrix (minutes)" ]
-                    , viewCostMatrix
+                    , viewCostMatrix model.activeStart.metersPerMinute
                     ]
                 ]
 
 
-{-| Lets you pick when the route starts, including which day of the week —
-that now matters, since about a fifth of the cities have real hours that
-vary by weekday. Editing these fields only takes effect the next time the
-search (re)starts — `activeStart` is snapshotted at that point, so nudging
-the clock mid-run can't shift the energy landscape out from under an
-in-progress search.
+{-| Lets you pick the conditions the next run starts under: which day of
+the week (that matters now, since about a fifth of the cities have real
+hours that vary by weekday), what time, and how fast travel between stops
+is (as a pace in minutes/mile — the units delivery routing usually gets
+quoted in — converted to meters/minute for `travelTime`). Editing these
+fields only takes effect the next time the search (re)starts —
+`activeStart` is snapshotted at that point, so nudging any of them mid-run
+can't shift the energy landscape out from under an in-progress search.
 -}
-viewStartPicker : Model -> Html Msg
-viewStartPicker model =
+viewRunSettings : Model -> Html Msg
+viewRunSettings model =
     Html.div [ Attr.style "display" "flex", Attr.style "gap" "1rem", Attr.style "align-items" "flex-end", Attr.style "margin-bottom" "0.75rem" ]
         [ Html.label []
             [ Html.div [ Attr.style "font-size" "0.75rem", Attr.style "color" "#666" ] [ Html.text "Start date" ]
@@ -687,6 +709,17 @@ viewStartPicker model =
                 ]
                 []
             ]
+        , Html.label []
+            [ Html.div [ Attr.style "font-size" "0.75rem", Attr.style "color" "#666" ] [ Html.text "Pace (min/mile)" ]
+            , Html.input
+                [ Attr.type_ "number"
+                , Attr.step "0.5"
+                , Attr.min "0.5"
+                , Attr.value model.speedInput
+                , Events.onInput SetSpeedInput
+                ]
+                []
+            ]
         , Html.div [ Attr.style "font-size" "0.8rem", Attr.style "color" "#666" ]
             [ Html.text
                 (case weekdayName model.startDate of
@@ -694,7 +727,7 @@ viewStartPicker model =
                         "Starts "
                             ++ day
                             ++ (if model.started then
-                                    " (change applies on restart)"
+                                    " (changes apply on restart)"
 
                                 else
                                     ""
@@ -835,8 +868,8 @@ matrixCell =
     ]
 
 
-viewCostMatrix : Html msg
-viewCostMatrix =
+viewCostMatrix : Float -> Html msg
+viewCostMatrix metersPerMinute =
     let
         cityList =
             Array.toList cities
@@ -856,7 +889,7 @@ viewCostMatrix =
                                         "—"
 
                                      else
-                                        String.fromInt (travelTime i j)
+                                        String.fromInt (travelTime metersPerMinute i j)
                                     )
                                 ]
                         )
