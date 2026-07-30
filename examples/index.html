@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Simulated Annealing — Examples</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 640px;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
+            color: #1a1a1a;
+        }
+        h1 {
+            margin-bottom: 0.25rem;
+        }
+        p.intro {
+            color: #444;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            margin: 1.5rem 0;
+            padding: 1rem 1.25rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        li a {
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-decoration: none;
+            color: #1f6feb;
+        }
+        li a:hover {
+            text-decoration: underline;
+        }
+        li p {
+            margin: 0.4rem 0 0;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simulated Annealing</h1>
+    <p class="intro">Three live examples of the <code>SimulatedAnnealing</code> Elm package, each chosen to exercise a different part of the library.</p>
+    <ul>
+        <li>
+            <a href="tsp.html">Traveling Salesman</a>
+            <p>Cities placed randomly on a canvas; a tour is annealed in front of you using 2-opt segment reversals, untangling as the temperature drops.</p>
+        </li>
+        <li>
+            <a href="time-windows.html">Time Windows</a>
+            <p>A delivery route with per-stop opening hours. The energy function walks the tour in order, carrying an accumulated clock forward so waiting for a city to open is penalized.</p>
+        </li>
+        <li>
+            <a href="sudoku.html">Sudoku</a>
+            <p>Pure constraint satisfaction with no notion of distance. Compares live annealing, the calibrated scheme from Rhyd Lewis's 2007 paper, and a plain backtracking solver on the same puzzle.</p>
+        </li>
+    </ul>
+</body>
+</html>
