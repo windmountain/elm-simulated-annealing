@@ -2,7 +2,6 @@ This library is entirely written by Claude Sonnet 5. I'm happy with it and find 
 
 To use in your project, clone it to a `vendor/` directory and add `vendor/elm-simulated-annealing/src` to `source-directories` in your elm.json file.
 
-
 # elm-simulated-annealing
 
 A pure, steppable [simulated annealing](https://en.wikipedia.org/wiki/Simulated_annealing) core for The Elm Architecture.
