@@ -7135,6 +7135,10 @@ var $author$project$Mctrot$Restart = {$: 'Restart'};
 var $author$project$Mctrot$Start = {$: 'Start'};
 var $author$project$Mctrot$ToggleMapVisible = {$: 'ToggleMapVisible'};
 var $author$project$Mctrot$ToggleRunning = {$: 'ToggleRunning'};
+var $author$project$SimulatedAnnealing$best = function (_v0) {
+	var s = _v0.a;
+	return s.best;
+};
 var $author$project$SimulatedAnnealing$bestEnergy = function (_v0) {
 	var s = _v0.a;
 	return s.bestEnergy;
@@ -7173,6 +7177,11 @@ var $elm$html$Html$div = _VirtualDom_node('div');
 var $author$project$Mctrot$formatDuration = function (minutes) {
 	return $elm$core$String$fromInt((minutes / 60) | 0) + ('h ' + ($elm$core$String$fromInt(
 		A2($elm$core$Basics$modBy, 60, minutes)) + 'm'));
+};
+var $author$project$Mctrot$formatMiles = function (meters) {
+	var tenths = $elm$core$Basics$round((meters / $author$project$Mctrot$metersPerMile) * 10);
+	return $elm$core$String$fromInt((tenths / 10) | 0) + ('.' + ($elm$core$String$fromInt(
+		A2($elm$core$Basics$modBy, 10, tenths)) + ' mi'));
 };
 var $elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
 var $author$project$SimulatedAnnealing$iteration = function (_v0) {
@@ -7251,6 +7260,21 @@ var $author$project$Mctrot$distanceBetween = F2(
 				$elm$core$Array$get(to),
 				A2($elm$core$Array$get, from, $author$project$Mctrot$distanceMeters)));
 	});
+var $elm$core$List$sum = function (numbers) {
+	return A3($elm$core$List$foldl, $elm$core$Basics$add, 0, numbers);
+};
+var $author$project$Mctrot$totalDistanceMeters = function (tour) {
+	var stops = _Utils_ap(
+		tour,
+		_List_fromArray(
+			[$author$project$Mctrot$endIndex]));
+	return $elm$core$List$sum(
+		A3(
+			$elm$core$List$map2,
+			$author$project$Mctrot$distanceBetween,
+			stops,
+			A2($elm$core$List$drop, 1, stops)));
+};
 var $author$project$Mctrot$matrixCell = _List_fromArray(
 	[
 		A2($elm$html$Html$Attributes$style, 'border', '1px solid #ddd'),
@@ -10862,7 +10886,18 @@ var $author$project$Mctrot$view = function (model) {
 							'Best route time',
 							$author$project$Mctrot$formatDuration(
 								$elm$core$Basics$round(
-									$author$project$SimulatedAnnealing$bestEnergy(state))))
+									$author$project$SimulatedAnnealing$bestEnergy(state)))),
+							A2(
+							$author$project$Mctrot$readout,
+							'Current distance',
+							$author$project$Mctrot$formatMiles(
+								$author$project$Mctrot$totalDistanceMeters(tour))),
+							A2(
+							$author$project$Mctrot$readout,
+							'Best distance',
+							$author$project$Mctrot$formatMiles(
+								$author$project$Mctrot$totalDistanceMeters(
+									$author$project$SimulatedAnnealing$best(state))))
 						])),
 					A2(
 					$elm$html$Html$div,

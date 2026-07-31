@@ -435,6 +435,19 @@ totalMinutes startTime tour =
         |> Maybe.withDefault 0
 
 
+{-| Road distance for the tour's full route (including its fixed final leg
+to `endIndex`), in meters — unlike `totalMinutes`, this doesn't depend on
+pace or waiting, so it's the same regardless of the run's start settings.
+-}
+totalDistanceMeters : Tour -> Int
+totalDistanceMeters tour =
+    let
+        stops =
+            tour ++ [ endIndex ]
+    in
+    List.map2 distanceBetween stops (List.drop 1 stops) |> List.sum
+
+
 {-| Reverse a random contiguous segment of the visiting order — the same
 2-opt move as the TSP example, just applied to a list of 46 stops instead of
 40.
@@ -664,6 +677,8 @@ view model =
                     , readout "Temperature" (String.fromInt (round (SimulatedAnnealing.temperature (config model.activeStart) state)))
                     , readout "Current route time" (formatDuration (round (SimulatedAnnealing.currentEnergy state)))
                     , readout "Best route time" (formatDuration (round (SimulatedAnnealing.bestEnergy state)))
+                    , readout "Current distance" (formatMiles (totalDistanceMeters tour))
+                    , readout "Best distance" (formatMiles (totalDistanceMeters (SimulatedAnnealing.best state)))
                     ]
                 , Html.div [ Attr.style "margin-top" "0.5rem", Attr.style "display" "flex", Attr.style "gap" "0.5rem" ]
                     [ if model.started then
@@ -1045,6 +1060,15 @@ formatClock absoluteMinutes =
 formatDuration : Int -> String
 formatDuration minutes =
     String.fromInt (minutes // 60) ++ "h " ++ String.fromInt (modBy 60 minutes) ++ "m"
+
+
+formatMiles : Int -> String
+formatMiles meters =
+    let
+        tenths =
+            round (toFloat meters / metersPerMile * 10)
+    in
+    String.fromInt (tenths // 10) ++ "." ++ String.fromInt (modBy 10 tenths) ++ " mi"
 
 
 main : Program () Model Msg
