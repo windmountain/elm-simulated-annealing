@@ -487,7 +487,7 @@ config : StartTime -> Config Tour
 config startTime =
     { energy = toFloat << totalMinutes startTime
     , neighbor = twoOptNeighbor
-    , temperature = Schedule.exponential { initial = 400, alpha = 0.9999 }
+    , temperature = Schedule.exponential { initial = 400, alpha = 0.99995 }
     , stoppingTemperature = 0.05
     }
 
