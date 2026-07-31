@@ -34,7 +34,9 @@ import Browser.Events
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
+import Html.Lazy
 import List.Extra
+import MctrotMapData
 import Random
 import SimulatedAnnealing exposing (Config, State)
 import SimulatedAnnealing.Schedule as Schedule
@@ -496,6 +498,7 @@ type alias Model =
     , startTimeOfDay : String
     , speedInput : String
     , activeStart : StartTime
+    , mapVisible : Bool
     }
 
 
@@ -508,6 +511,7 @@ type Msg
     | SetStartDate String
     | SetStartTimeOfDay String
     | SetSpeedInput String
+    | ToggleMapVisible
 
 
 init : () -> ( Model, Cmd Msg )
@@ -519,7 +523,7 @@ init _ =
     ( { saState = Nothing
       , running = False
       , started = False
-      , stepsPerFrame = 30
+      , stepsPerFrame = 1000
       , startDate = "2025-01-06"
       , startTimeOfDay = "06:00"
       , speedInput = speedInput
@@ -528,6 +532,7 @@ init _ =
             , minutes = parseStartMinutes "06:00"
             , metersPerMinute = metersPerMinuteFromPace (parseMinutesPerMile speedInput)
             }
+      , mapVisible = True
       }
     , Random.generate GotSeed Random.independentSeed
     )
@@ -584,6 +589,9 @@ update msg model =
         SetSpeedInput speed ->
             ( { model | speedInput = speed }, Cmd.none )
 
+        ToggleMapVisible ->
+            ( { model | mapVisible = not model.mapVisible }, Cmd.none )
+
 
 
 -- SUBSCRIPTIONS
@@ -637,13 +645,20 @@ view model =
                 viewMax =
                     max 600 (((totalMinutes model.activeStart tour // 60) + 1) * 60)
             in
-            Html.div [ Attr.style "font-family" "sans-serif", Attr.style "max-width" "800px" ]
+            Html.div [ Attr.style "font-family" "sans-serif", Attr.style "max-width" "1100px" ]
                 [ viewRunSettings model
-                , Svg.svg
-                    [ SvgAttr.width (String.fromFloat timelineWidth)
-                    , SvgAttr.height (String.fromFloat (rowHeight * toFloat (List.length visits) + 10))
+                , Html.div [ Attr.style "display" "flex", Attr.style "gap" "1rem", Attr.style "align-items" "flex-start" ]
+                    [ Svg.svg
+                        [ SvgAttr.width (String.fromFloat timelineWidth)
+                        , SvgAttr.height (String.fromFloat (rowHeight * toFloat (List.length visits) + 10))
+                        ]
+                        (List.indexedMap (viewRow model.activeStart viewMax) visits |> List.concat)
+                    , if model.mapVisible then
+                        viewMap tour
+
+                      else
+                        Html.text ""
                     ]
-                    (List.indexedMap (viewRow model.activeStart viewMax) visits |> List.concat)
                 , Html.div [ Attr.style "margin-top" "0.5rem", Attr.style "display" "flex", Attr.style "gap" "1.5rem" ]
                     [ readout "Iteration" (String.fromInt (SimulatedAnnealing.iteration state))
                     , readout "Temperature" (String.fromInt (round (SimulatedAnnealing.temperature (config model.activeStart) state)))
@@ -668,15 +683,108 @@ view model =
                       else
                         Html.button [ Events.onClick Start ] [ Html.text "Start" ]
                     , Html.button [ Events.onClick Restart ] [ Html.text "Restart (new seed)" ]
+                    , Html.button [ Events.onClick ToggleMapVisible ]
+                        [ Html.text
+                            (if model.mapVisible then
+                                "Hide map (faster)"
+
+                             else
+                                "Show map"
+                            )
+                        ]
                     ]
                 , Html.p [ Attr.style "color" "#666", Attr.style "font-size" "0.85rem" ]
-                    [ Html.text "Pink bands are hours a city is closed. Orange bars are time spent waiting for a city to open." ]
+                    [ Html.text "Pink bands are hours a restaurant is closed. Orange bars are time spent waiting for a restaurant to open." ]
                 , Html.details [ Attr.style "margin-top" "0.5rem" ]
                     [ Html.summary [ Attr.style "cursor" "pointer", Attr.style "color" "#666" ]
-                        [ Html.text "Travel time matrix (minutes)" ]
-                    , viewCostMatrix model.activeStart.metersPerMinute
+                        [ Html.text "Distance matrix (meters)" ]
+                    , viewCostMatrix
                     ]
                 ]
+
+
+mapDisplayWidth : Float
+mapDisplayWidth =
+    300
+
+
+mapDisplayHeight : Float
+mapDisplayHeight =
+    -- Matches mctrot_map.svg's viewBox aspect ratio (~1 : 3.64) at mapDisplayWidth.
+    1093
+
+
+{-| One space-separated `lX-lY` token per leg of the tour (the open path,
+plus its fixed final leg to `endIndex`), where X and Y are real `mcd_id`s
+(see `MctrotMapData.mcdIds`) in ascending order — matching the class-token
+convention already baked into `MctrotMapData.routeEdges`. Setting this as an
+ancestor `data-active` attribute is what lets `mctrot_map.css` highlight
+exactly the streets the current tour uses, without Elm ever touching the
+(lazy, otherwise-static) SVG subtree itself.
+-}
+tourEdgeTokens : Tour -> String
+tourEdgeTokens tour =
+    let
+        stops =
+            tour ++ [ endIndex ]
+    in
+    List.map2 pairToken stops (List.drop 1 stops)
+        |> String.join " "
+
+
+pairToken : Int -> Int -> String
+pairToken cityIndexA cityIndexB =
+    let
+        mcdIdFor cityIndex =
+            Array.get cityIndex MctrotMapData.mcdIds |> Maybe.withDefault 0
+
+        a =
+            mcdIdFor cityIndexA
+
+        b =
+            mcdIdFor cityIndexB
+    in
+    "l" ++ String.fromInt (min a b) ++ "-l" ++ String.fromInt (max a b)
+
+
+{-| The borough silhouette, all 2867 real-street route segments, and the 47
+location dots — built once and never touched again. `viewMap` wraps this in
+`Html.Lazy.lazy` so Elm's virtual DOM skips diffing it on every animation
+frame; only the wrapping `data-active` attribute actually changes per tick.
+-}
+viewMapStatic : () -> Html msg
+viewMapStatic () =
+    Svg.svg
+        [ SvgAttr.viewBox MctrotMapData.mapViewBox
+        , SvgAttr.width (String.fromFloat mapDisplayWidth)
+        , SvgAttr.height (String.fromFloat mapDisplayHeight)
+        ]
+        [ Svg.path [ SvgAttr.class "borough", SvgAttr.d MctrotMapData.boroughPath ] []
+        , Svg.g []
+            (MctrotMapData.routeEdges
+                |> List.map (\edge -> Svg.path [ SvgAttr.class edge.classes, SvgAttr.d edge.d ] [])
+            )
+        , Svg.g []
+            (MctrotMapData.locationCoords
+                |> Array.toList
+                |> List.map
+                    (\( x, y ) ->
+                        Svg.circle
+                            [ SvgAttr.class "location"
+                            , SvgAttr.cx (String.fromFloat x)
+                            , SvgAttr.cy (String.fromFloat y)
+                            , SvgAttr.r "150"
+                            ]
+                            []
+                    )
+            )
+        ]
+
+
+viewMap : Tour -> Html msg
+viewMap tour =
+    Html.div [ Attr.attribute "data-active" (tourEdgeTokens tour) ]
+        [ Html.Lazy.lazy viewMapStatic () ]
 
 
 {-| Lets you pick the conditions the next run starts under: which day of
@@ -868,8 +976,16 @@ matrixCell =
     ]
 
 
-viewCostMatrix : Float -> Html msg
-viewCostMatrix metersPerMinute =
+distanceBetween : Int -> Int -> Int
+distanceBetween from to =
+    distanceMeters
+        |> Array.get from
+        |> Maybe.andThen (Array.get to)
+        |> Maybe.withDefault 0
+
+
+viewCostMatrix : Html msg
+viewCostMatrix =
     let
         cityList =
             Array.toList cities
@@ -889,7 +1005,7 @@ viewCostMatrix metersPerMinute =
                                         "—"
 
                                      else
-                                        String.fromInt (travelTime metersPerMinute i j)
+                                        String.fromInt (distanceBetween i j)
                                     )
                                 ]
                         )

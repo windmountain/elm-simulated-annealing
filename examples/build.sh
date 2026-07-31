@@ -15,4 +15,10 @@ for src in src/*.elm; do
   # elm make always emits `body { padding: 0; margin: 0; }` — give every
   # example page some breathing room from the browser edges instead.
   sed -i '' 's/body { padding: 0; margin: 0; }/body { padding: 0; margin: 3em; }/' "$html"
+
+  # Mctrot's map view is styled by a generated stylesheet (see
+  # generate_map_data.py) kept out of Elm's virtual DOM entirely; link it in.
+  if [ "$kebab" = "mctrot" ]; then
+    sed -i '' 's#</head>#<link rel="stylesheet" href="mctrot_map.css"></head>#' "$html"
+  fi
 done
