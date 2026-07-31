@@ -4,7 +4,18 @@
 mctrot_map.svg is the source of truth (a real Manhattan silhouette, the 47
 McDonald's locations, and a real-street routing layer where each road
 segment's `class` attribute lists every location-pair whose shortest route
-crosses it). This script transcodes that static SVG into:
+crosses it). The source SVG cuts that routing layer into one `<path>` per
+road-network node-to-node segment (2867 of them), but many neighboring
+segments -- ones that just happen to sit between the same two intersections
+along a street with no route ever forking there -- carry the exact same
+`lX-lY` membership. Since SVG lets one `<path>` hold several disconnected
+`M ... L ...` subpaths (rendered identically to separate elements, same
+stroke/class for all of them), `merge_edges` combines every group of edges
+that share an identical membership set into a single multi-subpath entry --
+2867 edges collapse to ~620, with no change to what's drawn or how the
+`data-active` CSS highlighting behaves.
+
+This script transcodes the (merged) SVG into:
 
   - src/MctrotMapData.elm: pure Elm data (no logic) that Mctrot.elm renders.
   - mctrot_map.css: base layer styles plus one CSS rule per possible
@@ -50,12 +61,36 @@ def main():
         edges.append((path.get("class"), path.get("d")))
     assert edges, "no route-edge paths found"
 
-    write_elm(view_box, borough_d, locations, edges)
+    merged_edges = merge_edges(edges)
+
+    write_elm(view_box, borough_d, locations, merged_edges)
     write_css([mcd_id for mcd_id, _, _ in locations])
 
-    print(f"wrote {ELM_OUT} ({len(locations)} locations, {len(edges)} route edges)")
+    print(
+        f"wrote {ELM_OUT} ({len(locations)} locations, "
+        f"{len(edges)} route edges merged into {len(merged_edges)})"
+    )
     n = len(locations)
     print(f"wrote {CSS_OUT} ({n * (n - 1) // 2} highlight rules)")
+
+
+def merge_edges(edges):
+    """Combines edges that share an identical `lX-lY` membership set into one
+    multi-subpath entry each (see the module docstring for why this is safe).
+    """
+    groups = {}
+    order = []
+    for classes, d in edges:
+        tokens = tuple(sorted(classes.split()[1:]))
+        if tokens not in groups:
+            groups[tokens] = []
+            order.append(tokens)
+        groups[tokens].append(d)
+
+    return [
+        ("route-edge " + " ".join(tokens), " ".join(groups[tokens]))
+        for tokens in order
+    ]
 
 
 def write_elm(view_box, borough_d, locations, edges):
@@ -104,10 +139,14 @@ locationCoords =
     Array.fromList [ {coords_list} ]
 
 
-{{-| Every real-street road segment in the routing layer. Each `classes`
-string already includes every `lX-lY` token (X, Y are `mcdIds` values) whose
-shortest route crosses that segment -- see mctrot_map.css for the
-`[data-active~="lX-lY"] .lX-lY` highlight rules these tokens drive.
+{{-| Every real-street road segment in the routing layer, with adjacent
+segments that share an identical route membership already merged into one
+entry (see generate_map_data.py's `merge_edges`) -- `d` may hold several
+disconnected `M ... L ...` subpaths, which render exactly like separate
+`<path>` elements would. Each `classes` string includes every `lX-lY` token
+(X, Y are `mcdIds` values) whose shortest route crosses that segment -- see
+mctrot_map.css for the `[data-active~="lX-lY"] .lX-lY` highlight rules these
+tokens drive.
 -}}
 routeEdges : List {{ classes : String, d : String }}
 routeEdges =
