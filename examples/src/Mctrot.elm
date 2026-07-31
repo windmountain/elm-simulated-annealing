@@ -659,27 +659,8 @@ view model =
                     max 600 (((totalMinutes model.activeStart tour // 60) + 1) * 60)
             in
             Html.div [ Attr.style "font-family" "sans-serif", Attr.style "max-width" "1100px" ]
-                [ viewRunSettings model
-                , Html.div [ Attr.style "display" "flex", Attr.style "gap" "1rem", Attr.style "align-items" "flex-start" ]
-                    [ Svg.svg
-                        [ SvgAttr.width (String.fromFloat timelineWidth)
-                        , SvgAttr.height (String.fromFloat (rowHeight * toFloat (List.length visits) + 10))
-                        ]
-                        (List.indexedMap (viewRow model.activeStart viewMax) visits |> List.concat)
-                    , if model.mapVisible then
-                        viewMap tour
-
-                      else
-                        Html.text ""
-                    ]
-                , Html.div [ Attr.style "margin-top" "0.5rem", Attr.style "display" "flex", Attr.style "gap" "1.5rem" ]
-                    [ readout "Iteration" (String.fromInt (SimulatedAnnealing.iteration state))
-                    , readout "Temperature" (String.fromInt (round (SimulatedAnnealing.temperature (config model.activeStart) state)))
-                    , readout "Current route time" (formatDuration (round (SimulatedAnnealing.currentEnergy state)))
-                    , readout "Best route time" (formatDuration (round (SimulatedAnnealing.bestEnergy state)))
-                    , readout "Current distance" (formatMiles (totalDistanceMeters tour))
-                    , readout "Best distance" (formatMiles (totalDistanceMeters (SimulatedAnnealing.best state)))
-                    ]
+                [ Html.h3 [] [ Html.text "Mctrot" ]
+                , viewRunSettings model
                 , Html.div [ Attr.style "margin-top" "0.5rem", Attr.style "display" "flex", Attr.style "gap" "0.5rem" ]
                     [ if model.started then
                         Html.button [ Events.onClick ToggleRunning, Attr.disabled done ]
@@ -708,11 +689,38 @@ view model =
                             )
                         ]
                     ]
-                , Html.p [ Attr.style "color" "#666", Attr.style "font-size" "0.85rem" ]
-                    [ Html.text "Pink bands are hours a restaurant is closed. Orange bars are time spent waiting for a restaurant to open." ]
-                , Html.details [ Attr.style "margin-top" "0.5rem" ]
+                , Html.div [ Attr.style "display" "flex", Attr.style "gap" "1rem", Attr.style "align-items" "flex-start" ]
+                    [ Html.div []
+                        [ sectionHeading "Schedule"
+                        , Html.p [ Attr.style "color" "#666", Attr.style "font-size" "0.85rem", Attr.style "margin" "0 0 0.5rem 0" ]
+                            [ Html.text "Pink bands are hours a restaurant is closed. Orange bars are time spent waiting for a restaurant to open." ]
+                        , Svg.svg
+                            [ SvgAttr.width (String.fromFloat timelineWidth)
+                            , SvgAttr.height (String.fromFloat (rowHeight * toFloat (List.length visits) + 10))
+                            ]
+                            (List.indexedMap (viewRow model.activeStart viewMax) visits |> List.concat)
+                        ]
+                    , if model.mapVisible then
+                        Html.div []
+                            [ sectionHeading "Map"
+                            , viewMap tour
+                            ]
+
+                      else
+                        Html.text ""
+                    ]
+                , Html.div [ Attr.style "margin-top" "0.5rem", Attr.style "display" "flex", Attr.style "gap" "1.5rem" ]
+                    [ readout "Iteration" (String.fromInt (SimulatedAnnealing.iteration state))
+                    , readout "Temperature" (String.fromInt (round (SimulatedAnnealing.temperature (config model.activeStart) state)))
+                    , readout "Current route time" (formatDuration (round (SimulatedAnnealing.currentEnergy state)))
+                    , readout "Best route time" (formatDuration (round (SimulatedAnnealing.bestEnergy state)))
+                    , readout "Current distance" (formatMiles (totalDistanceMeters tour))
+                    , readout "Best distance" (formatMiles (totalDistanceMeters (SimulatedAnnealing.best state)))
+                    ]
+                , sectionHeading "Distance matrix"
+                , Html.details [ Attr.style "margin-top" "0" ]
                     [ Html.summary [ Attr.style "cursor" "pointer", Attr.style "color" "#666" ]
-                        [ Html.text "Distance matrix (meters)" ]
+                        [ Html.text "Show table (meters)" ]
                     , viewCostMatrix
                     ]
                 ]
@@ -861,6 +869,11 @@ viewRunSettings model =
                 )
             ]
         ]
+
+
+sectionHeading : String -> Html msg
+sectionHeading text =
+    Html.h4 [ Attr.style "margin" "0.75rem 0 0.25rem 0" ] [ Html.text text ]
 
 
 readout : String -> String -> Html msg

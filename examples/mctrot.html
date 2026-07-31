@@ -7183,6 +7183,7 @@ var $author$project$Mctrot$formatMiles = function (meters) {
 	return $elm$core$String$fromInt((tenths / 10) | 0) + ('.' + ($elm$core$String$fromInt(
 		A2($elm$core$Basics$modBy, 10, tenths)) + ' mi'));
 };
+var $elm$html$Html$h3 = _VirtualDom_node('h3');
 var $elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
 var $author$project$SimulatedAnnealing$iteration = function (_v0) {
 	var s = _v0.a;
@@ -7241,6 +7242,19 @@ var $author$project$Mctrot$readout = F2(
 				]));
 	});
 var $author$project$Mctrot$rowHeight = 34;
+var $elm$html$Html$h4 = _VirtualDom_node('h4');
+var $author$project$Mctrot$sectionHeading = function (text) {
+	return A2(
+		$elm$html$Html$h4,
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'margin', '0.75rem 0 0.25rem 0')
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text(text)
+			]));
+};
 var $elm$html$Html$summary = _VirtualDom_node('summary');
 var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
 var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
@@ -10823,82 +10837,14 @@ var $author$project$Mctrot$view = function (model) {
 				]),
 			_List_fromArray(
 				[
+					A2(
+					$elm$html$Html$h3,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Mctrot')
+						])),
 					$author$project$Mctrot$viewRunSettings(model),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							A2($elm$html$Html$Attributes$style, 'display', 'flex'),
-							A2($elm$html$Html$Attributes$style, 'gap', '1rem'),
-							A2($elm$html$Html$Attributes$style, 'align-items', 'flex-start')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$svg$Svg$svg,
-							_List_fromArray(
-								[
-									$elm$svg$Svg$Attributes$width(
-									$elm$core$String$fromFloat($author$project$Mctrot$timelineWidth)),
-									$elm$svg$Svg$Attributes$height(
-									$elm$core$String$fromFloat(
-										($author$project$Mctrot$rowHeight * $elm$core$List$length(visits)) + 10))
-								]),
-							$elm$core$List$concat(
-								A2(
-									$elm$core$List$indexedMap,
-									A2($author$project$Mctrot$viewRow, model.activeStart, viewMax),
-									visits))),
-							model.mapVisible ? $author$project$Mctrot$viewMap(tour) : $elm$html$Html$text('')
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							A2($elm$html$Html$Attributes$style, 'margin-top', '0.5rem'),
-							A2($elm$html$Html$Attributes$style, 'display', 'flex'),
-							A2($elm$html$Html$Attributes$style, 'gap', '1.5rem')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$author$project$Mctrot$readout,
-							'Iteration',
-							$elm$core$String$fromInt(
-								$author$project$SimulatedAnnealing$iteration(state))),
-							A2(
-							$author$project$Mctrot$readout,
-							'Temperature',
-							$elm$core$String$fromInt(
-								$elm$core$Basics$round(
-									A2(
-										$author$project$SimulatedAnnealing$temperature,
-										$author$project$Mctrot$config(model.activeStart),
-										state)))),
-							A2(
-							$author$project$Mctrot$readout,
-							'Current route time',
-							$author$project$Mctrot$formatDuration(
-								$elm$core$Basics$round(
-									$author$project$SimulatedAnnealing$currentEnergy(state)))),
-							A2(
-							$author$project$Mctrot$readout,
-							'Best route time',
-							$author$project$Mctrot$formatDuration(
-								$elm$core$Basics$round(
-									$author$project$SimulatedAnnealing$bestEnergy(state)))),
-							A2(
-							$author$project$Mctrot$readout,
-							'Current distance',
-							$author$project$Mctrot$formatMiles(
-								$author$project$Mctrot$totalDistanceMeters(tour))),
-							A2(
-							$author$project$Mctrot$readout,
-							'Best distance',
-							$author$project$Mctrot$formatMiles(
-								$author$project$Mctrot$totalDistanceMeters(
-									$author$project$SimulatedAnnealing$best(state))))
-						])),
 					A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -10953,21 +10899,112 @@ var $author$project$Mctrot$view = function (model) {
 								]))
 						])),
 					A2(
-					$elm$html$Html$p,
+					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							A2($elm$html$Html$Attributes$style, 'color', '#666'),
-							A2($elm$html$Html$Attributes$style, 'font-size', '0.85rem')
+							A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+							A2($elm$html$Html$Attributes$style, 'gap', '1rem'),
+							A2($elm$html$Html$Attributes$style, 'align-items', 'flex-start')
 						]),
 					_List_fromArray(
 						[
-							$elm$html$Html$text('Pink bands are hours a restaurant is closed. Orange bars are time spent waiting for a restaurant to open.')
+							A2(
+							$elm$html$Html$div,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$author$project$Mctrot$sectionHeading('Schedule'),
+									A2(
+									$elm$html$Html$p,
+									_List_fromArray(
+										[
+											A2($elm$html$Html$Attributes$style, 'color', '#666'),
+											A2($elm$html$Html$Attributes$style, 'font-size', '0.85rem'),
+											A2($elm$html$Html$Attributes$style, 'margin', '0 0 0.5rem 0')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('Pink bands are hours a restaurant is closed. Orange bars are time spent waiting for a restaurant to open.')
+										])),
+									A2(
+									$elm$svg$Svg$svg,
+									_List_fromArray(
+										[
+											$elm$svg$Svg$Attributes$width(
+											$elm$core$String$fromFloat($author$project$Mctrot$timelineWidth)),
+											$elm$svg$Svg$Attributes$height(
+											$elm$core$String$fromFloat(
+												($author$project$Mctrot$rowHeight * $elm$core$List$length(visits)) + 10))
+										]),
+									$elm$core$List$concat(
+										A2(
+											$elm$core$List$indexedMap,
+											A2($author$project$Mctrot$viewRow, model.activeStart, viewMax),
+											visits)))
+								])),
+							model.mapVisible ? A2(
+							$elm$html$Html$div,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$author$project$Mctrot$sectionHeading('Map'),
+									$author$project$Mctrot$viewMap(tour)
+								])) : $elm$html$Html$text('')
 						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$style, 'margin-top', '0.5rem'),
+							A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+							A2($elm$html$Html$Attributes$style, 'gap', '1.5rem')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$author$project$Mctrot$readout,
+							'Iteration',
+							$elm$core$String$fromInt(
+								$author$project$SimulatedAnnealing$iteration(state))),
+							A2(
+							$author$project$Mctrot$readout,
+							'Temperature',
+							$elm$core$String$fromInt(
+								$elm$core$Basics$round(
+									A2(
+										$author$project$SimulatedAnnealing$temperature,
+										$author$project$Mctrot$config(model.activeStart),
+										state)))),
+							A2(
+							$author$project$Mctrot$readout,
+							'Current route time',
+							$author$project$Mctrot$formatDuration(
+								$elm$core$Basics$round(
+									$author$project$SimulatedAnnealing$currentEnergy(state)))),
+							A2(
+							$author$project$Mctrot$readout,
+							'Best route time',
+							$author$project$Mctrot$formatDuration(
+								$elm$core$Basics$round(
+									$author$project$SimulatedAnnealing$bestEnergy(state)))),
+							A2(
+							$author$project$Mctrot$readout,
+							'Current distance',
+							$author$project$Mctrot$formatMiles(
+								$author$project$Mctrot$totalDistanceMeters(tour))),
+							A2(
+							$author$project$Mctrot$readout,
+							'Best distance',
+							$author$project$Mctrot$formatMiles(
+								$author$project$Mctrot$totalDistanceMeters(
+									$author$project$SimulatedAnnealing$best(state))))
+						])),
+					$author$project$Mctrot$sectionHeading('Distance matrix'),
 					A2(
 					$elm$html$Html$details,
 					_List_fromArray(
 						[
-							A2($elm$html$Html$Attributes$style, 'margin-top', '0.5rem')
+							A2($elm$html$Html$Attributes$style, 'margin-top', '0')
 						]),
 					_List_fromArray(
 						[
@@ -10980,7 +11017,7 @@ var $author$project$Mctrot$view = function (model) {
 								]),
 							_List_fromArray(
 								[
-									$elm$html$Html$text('Distance matrix (meters)')
+									$elm$html$Html$text('Show table (meters)')
 								])),
 							$author$project$Mctrot$viewCostMatrix
 						]))
