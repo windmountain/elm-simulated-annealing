@@ -4429,52 +4429,6 @@ var _Bitwise_shiftRightZfBy = F2(function(offset, a)
 {
 	return a >>> offset;
 });
-
-
-
-function _Time_now(millisToPosix)
-{
-	return _Scheduler_binding(function(callback)
-	{
-		callback(_Scheduler_succeed(millisToPosix(Date.now())));
-	});
-}
-
-var _Time_setInterval = F2(function(interval, task)
-{
-	return _Scheduler_binding(function(callback)
-	{
-		var id = setInterval(function() { _Scheduler_rawSpawn(task); }, interval);
-		return function() { clearInterval(id); };
-	});
-});
-
-function _Time_here()
-{
-	return _Scheduler_binding(function(callback)
-	{
-		callback(_Scheduler_succeed(
-			A2($elm$time$Time$customZone, -(new Date().getTimezoneOffset()), _List_Nil)
-		));
-	});
-}
-
-
-function _Time_getZoneName()
-{
-	return _Scheduler_binding(function(callback)
-	{
-		try
-		{
-			var name = $elm$time$Time$Name(Intl.DateTimeFormat().resolvedOptions().timeZone);
-		}
-		catch (e)
-		{
-			var name = $elm$time$Time$Offset(new Date().getTimezoneOffset());
-		}
-		callback(_Scheduler_succeed(name));
-	});
-}
 var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
@@ -5264,345 +5218,6 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$element = _Browser_element;
-var $author$project$Mctrot$GotSeed = function (a) {
-	return {$: 'GotSeed', a: a};
-};
-var $author$project$Mctrot$defaultMinutesPerMile = 24;
-var $elm$core$String$fromFloat = _String_fromNumber;
-var $elm$random$Random$Generate = function (a) {
-	return {$: 'Generate', a: a};
-};
-var $elm$random$Random$Seed = F2(
-	function (a, b) {
-		return {$: 'Seed', a: a, b: b};
-	});
-var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
-var $elm$random$Random$next = function (_v0) {
-	var state0 = _v0.a;
-	var incr = _v0.b;
-	return A2($elm$random$Random$Seed, ((state0 * 1664525) + incr) >>> 0, incr);
-};
-var $elm$random$Random$initialSeed = function (x) {
-	var _v0 = $elm$random$Random$next(
-		A2($elm$random$Random$Seed, 0, 1013904223));
-	var state1 = _v0.a;
-	var incr = _v0.b;
-	var state2 = (state1 + x) >>> 0;
-	return $elm$random$Random$next(
-		A2($elm$random$Random$Seed, state2, incr));
-};
-var $elm$time$Time$Name = function (a) {
-	return {$: 'Name', a: a};
-};
-var $elm$time$Time$Offset = function (a) {
-	return {$: 'Offset', a: a};
-};
-var $elm$time$Time$Zone = F2(
-	function (a, b) {
-		return {$: 'Zone', a: a, b: b};
-	});
-var $elm$time$Time$customZone = $elm$time$Time$Zone;
-var $elm$time$Time$Posix = function (a) {
-	return {$: 'Posix', a: a};
-};
-var $elm$time$Time$millisToPosix = $elm$time$Time$Posix;
-var $elm$time$Time$now = _Time_now($elm$time$Time$millisToPosix);
-var $elm$time$Time$posixToMillis = function (_v0) {
-	var millis = _v0.a;
-	return millis;
-};
-var $elm$random$Random$init = A2(
-	$elm$core$Task$andThen,
-	function (time) {
-		return $elm$core$Task$succeed(
-			$elm$random$Random$initialSeed(
-				$elm$time$Time$posixToMillis(time)));
-	},
-	$elm$time$Time$now);
-var $elm$random$Random$step = F2(
-	function (_v0, seed) {
-		var generator = _v0.a;
-		return generator(seed);
-	});
-var $elm$random$Random$onEffects = F3(
-	function (router, commands, seed) {
-		if (!commands.b) {
-			return $elm$core$Task$succeed(seed);
-		} else {
-			var generator = commands.a.a;
-			var rest = commands.b;
-			var _v1 = A2($elm$random$Random$step, generator, seed);
-			var value = _v1.a;
-			var newSeed = _v1.b;
-			return A2(
-				$elm$core$Task$andThen,
-				function (_v2) {
-					return A3($elm$random$Random$onEffects, router, rest, newSeed);
-				},
-				A2($elm$core$Platform$sendToApp, router, value));
-		}
-	});
-var $elm$random$Random$onSelfMsg = F3(
-	function (_v0, _v1, seed) {
-		return $elm$core$Task$succeed(seed);
-	});
-var $elm$random$Random$Generator = function (a) {
-	return {$: 'Generator', a: a};
-};
-var $elm$random$Random$map = F2(
-	function (func, _v0) {
-		var genA = _v0.a;
-		return $elm$random$Random$Generator(
-			function (seed0) {
-				var _v1 = genA(seed0);
-				var a = _v1.a;
-				var seed1 = _v1.b;
-				return _Utils_Tuple2(
-					func(a),
-					seed1);
-			});
-	});
-var $elm$random$Random$cmdMap = F2(
-	function (func, _v0) {
-		var generator = _v0.a;
-		return $elm$random$Random$Generate(
-			A2($elm$random$Random$map, func, generator));
-	});
-_Platform_effectManagers['Random'] = _Platform_createManager($elm$random$Random$init, $elm$random$Random$onEffects, $elm$random$Random$onSelfMsg, $elm$random$Random$cmdMap);
-var $elm$random$Random$command = _Platform_leaf('Random');
-var $elm$random$Random$generate = F2(
-	function (tagger, generator) {
-		return $elm$random$Random$command(
-			$elm$random$Random$Generate(
-				A2($elm$random$Random$map, tagger, generator)));
-	});
-var $elm$core$Bitwise$and = _Bitwise_and;
-var $elm$core$Basics$negate = function (n) {
-	return -n;
-};
-var $elm$core$Bitwise$xor = _Bitwise_xor;
-var $elm$random$Random$peel = function (_v0) {
-	var state = _v0.a;
-	var word = (state ^ (state >>> ((state >>> 28) + 4))) * 277803737;
-	return ((word >>> 22) ^ word) >>> 0;
-};
-var $elm$random$Random$int = F2(
-	function (a, b) {
-		return $elm$random$Random$Generator(
-			function (seed0) {
-				var _v0 = (_Utils_cmp(a, b) < 0) ? _Utils_Tuple2(a, b) : _Utils_Tuple2(b, a);
-				var lo = _v0.a;
-				var hi = _v0.b;
-				var range = (hi - lo) + 1;
-				if (!((range - 1) & range)) {
-					return _Utils_Tuple2(
-						(((range - 1) & $elm$random$Random$peel(seed0)) >>> 0) + lo,
-						$elm$random$Random$next(seed0));
-				} else {
-					var threshhold = (((-range) >>> 0) % range) >>> 0;
-					var accountForBias = function (seed) {
-						accountForBias:
-						while (true) {
-							var x = $elm$random$Random$peel(seed);
-							var seedN = $elm$random$Random$next(seed);
-							if (_Utils_cmp(x, threshhold) < 0) {
-								var $temp$seed = seedN;
-								seed = $temp$seed;
-								continue accountForBias;
-							} else {
-								return _Utils_Tuple2((x % range) + lo, seedN);
-							}
-						}
-					};
-					return accountForBias(seed0);
-				}
-			});
-	});
-var $elm$random$Random$map3 = F4(
-	function (func, _v0, _v1, _v2) {
-		var genA = _v0.a;
-		var genB = _v1.a;
-		var genC = _v2.a;
-		return $elm$random$Random$Generator(
-			function (seed0) {
-				var _v3 = genA(seed0);
-				var a = _v3.a;
-				var seed1 = _v3.b;
-				var _v4 = genB(seed1);
-				var b = _v4.a;
-				var seed2 = _v4.b;
-				var _v5 = genC(seed2);
-				var c = _v5.a;
-				var seed3 = _v5.b;
-				return _Utils_Tuple2(
-					A3(func, a, b, c),
-					seed3);
-			});
-	});
-var $elm$core$Bitwise$or = _Bitwise_or;
-var $elm$random$Random$independentSeed = $elm$random$Random$Generator(
-	function (seed0) {
-		var makeIndependentSeed = F3(
-			function (state, b, c) {
-				return $elm$random$Random$next(
-					A2($elm$random$Random$Seed, state, (1 | (b ^ c)) >>> 0));
-			});
-		var gen = A2($elm$random$Random$int, 0, 4294967295);
-		return A2(
-			$elm$random$Random$step,
-			A4($elm$random$Random$map3, makeIndependentSeed, gen, gen, gen),
-			seed0);
-	});
-var $author$project$Mctrot$metersPerMile = 1609.344;
-var $author$project$Mctrot$metersPerMinuteFromPace = function (minutesPerMile) {
-	return $author$project$Mctrot$metersPerMile / minutesPerMile;
-};
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
-var $elm$core$Basics$modBy = _Basics_modBy;
-var $author$project$Mctrot$parseDate = function (isoDate) {
-	var _v0 = A2(
-		$elm$core$List$map,
-		$elm$core$String$toInt,
-		A2($elm$core$String$split, '-', isoDate));
-	if ((((((_v0.b && (_v0.a.$ === 'Just')) && _v0.b.b) && (_v0.b.a.$ === 'Just')) && _v0.b.b.b) && (_v0.b.b.a.$ === 'Just')) && (!_v0.b.b.b.b)) {
-		var year = _v0.a.a;
-		var _v1 = _v0.b;
-		var month = _v1.a.a;
-		var _v2 = _v1.b;
-		var day = _v2.a.a;
-		return $elm$core$Maybe$Just(
-			_Utils_Tuple3(year, month, day));
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $elm$core$List$drop = F2(
-	function (n, list) {
-		drop:
-		while (true) {
-			if (n <= 0) {
-				return list;
-			} else {
-				if (!list.b) {
-					return list;
-				} else {
-					var x = list.a;
-					var xs = list.b;
-					var $temp$n = n - 1,
-						$temp$list = xs;
-					n = $temp$n;
-					list = $temp$list;
-					continue drop;
-				}
-			}
-		}
-	});
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $elm_community$list_extra$List$Extra$getAt = F2(
-	function (idx, xs) {
-		return (idx < 0) ? $elm$core$Maybe$Nothing : $elm$core$List$head(
-			A2($elm$core$List$drop, idx, xs));
-	});
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
-var $author$project$Mctrot$sakamotoWeekday = F3(
-	function (year, month, day) {
-		var y = (month < 3) ? (year - 1) : year;
-		var offsets = _List_fromArray(
-			[0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4]);
-		var offset = A2(
-			$elm$core$Maybe$withDefault,
-			0,
-			A2($elm_community$list_extra$List$Extra$getAt, month - 1, offsets));
-		return A2($elm$core$Basics$modBy, 7, ((((y + ((y / 4) | 0)) - ((y / 100) | 0)) + ((y / 400) | 0)) + offset) + day);
-	});
-var $author$project$Mctrot$mondayIndexedWeekday = function (isoDate) {
-	return A2(
-		$elm$core$Maybe$withDefault,
-		0,
-		A2(
-			$elm$core$Maybe$map,
-			function (_v0) {
-				var year = _v0.a;
-				var month = _v0.b;
-				var day = _v0.c;
-				return A2(
-					$elm$core$Basics$modBy,
-					7,
-					A3($author$project$Mctrot$sakamotoWeekday, year, month, day) + 6);
-			},
-			$author$project$Mctrot$parseDate(isoDate)));
-};
-var $elm$core$String$toFloat = _String_toFloat;
-var $author$project$Mctrot$parseMinutesPerMile = function (raw) {
-	var _v0 = $elm$core$String$toFloat(raw);
-	if (_v0.$ === 'Just') {
-		var minutesPerMile = _v0.a;
-		return (minutesPerMile > 0) ? minutesPerMile : $author$project$Mctrot$defaultMinutesPerMile;
-	} else {
-		return $author$project$Mctrot$defaultMinutesPerMile;
-	}
-};
-var $author$project$Mctrot$parseStartMinutes = function (timeOfDay) {
-	var _v0 = A2(
-		$elm$core$List$map,
-		$elm$core$String$toInt,
-		A2($elm$core$String$split, ':', timeOfDay));
-	if ((((_v0.b && (_v0.a.$ === 'Just')) && _v0.b.b) && (_v0.b.a.$ === 'Just')) && (!_v0.b.b.b)) {
-		var hh = _v0.a.a;
-		var _v1 = _v0.b;
-		var mm = _v1.a.a;
-		return (hh * 60) + mm;
-	} else {
-		return 6 * 60;
-	}
-};
-var $author$project$Mctrot$init = function (_v0) {
-	var speedInput = $elm$core$String$fromFloat($author$project$Mctrot$defaultMinutesPerMile);
-	return _Utils_Tuple2(
-		{
-			activeStart: {
-				metersPerMinute: $author$project$Mctrot$metersPerMinuteFromPace(
-					$author$project$Mctrot$parseMinutesPerMile(speedInput)),
-				minutes: $author$project$Mctrot$parseStartMinutes('06:00'),
-				weekday: $author$project$Mctrot$mondayIndexedWeekday('2025-01-06')
-			},
-			mapVisible: true,
-			running: false,
-			saState: $elm$core$Maybe$Nothing,
-			speedInput: speedInput,
-			startDate: '2025-01-06',
-			startTimeOfDay: '06:00',
-			started: false,
-			stepsPerFrame: 1000
-		},
-		A2($elm$random$Random$generate, $author$project$Mctrot$GotSeed, $elm$random$Random$independentSeed));
-};
-var $author$project$Mctrot$Tick = {$: 'Tick'};
 var $elm$core$Basics$composeL = F3(
 	function (g, f, x) {
 		return g(
@@ -5633,6 +5248,16 @@ var $elm_community$list_extra$List$Extra$last = function (items) {
 		}
 	}
 };
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
 var $author$project$Mctrot$City = F3(
 	function (name, openWindows, closedWindows) {
 		return {closedWindows: closedWindows, name: name, openWindows: openWindows};
@@ -6207,6 +5832,15 @@ var $elm$core$List$filter = F2(
 			_List_Nil,
 			list);
 	});
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
 var $elm$core$Tuple$second = function (_v0) {
 	var y = _v0.b;
 	return y;
@@ -6230,6 +5864,15 @@ var $elm$core$Array$toIndexedList = function (array) {
 		_Utils_Tuple2(len - 1, _List_Nil),
 		array).b;
 };
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
 var $author$project$Mctrot$endIndex = A2(
 	$elm$core$Maybe$withDefault,
 	0,
@@ -6244,6 +5887,8 @@ var $author$project$Mctrot$endIndex = A2(
 					return city.name === 'OCCUPY';
 				},
 				$elm$core$Array$toIndexedList($author$project$Mctrot$cities)))));
+var $elm$core$Bitwise$and = _Bitwise_and;
+var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
 var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
 var $elm$core$Basics$ge = _Utils_ge;
 var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
@@ -6504,6 +6149,7 @@ var $elm$core$List$minimum = function (list) {
 		return $elm$core$Maybe$Nothing;
 	}
 };
+var $elm$core$Basics$modBy = _Basics_modBy;
 var $author$project$Mctrot$weekMinute = F2(
 	function (startTime, arrival) {
 		return A2($elm$core$Basics$modBy, $author$project$Mctrot$weekLength, ((startTime.weekday * $author$project$Mctrot$dayLength) + startTime.minutes) + arrival);
@@ -6595,6 +6241,72 @@ var $author$project$Mctrot$totalMinutes = F2(
 				$elm_community$list_extra$List$Extra$last(
 					A2($author$project$Mctrot$simulate, startTime, tour))));
 	});
+var $elm$random$Random$Generator = function (a) {
+	return {$: 'Generator', a: a};
+};
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $elm$random$Random$Seed = F2(
+	function (a, b) {
+		return {$: 'Seed', a: a, b: b};
+	});
+var $elm$random$Random$next = function (_v0) {
+	var state0 = _v0.a;
+	var incr = _v0.b;
+	return A2($elm$random$Random$Seed, ((state0 * 1664525) + incr) >>> 0, incr);
+};
+var $elm$core$Bitwise$xor = _Bitwise_xor;
+var $elm$random$Random$peel = function (_v0) {
+	var state = _v0.a;
+	var word = (state ^ (state >>> ((state >>> 28) + 4))) * 277803737;
+	return ((word >>> 22) ^ word) >>> 0;
+};
+var $elm$random$Random$int = F2(
+	function (a, b) {
+		return $elm$random$Random$Generator(
+			function (seed0) {
+				var _v0 = (_Utils_cmp(a, b) < 0) ? _Utils_Tuple2(a, b) : _Utils_Tuple2(b, a);
+				var lo = _v0.a;
+				var hi = _v0.b;
+				var range = (hi - lo) + 1;
+				if (!((range - 1) & range)) {
+					return _Utils_Tuple2(
+						(((range - 1) & $elm$random$Random$peel(seed0)) >>> 0) + lo,
+						$elm$random$Random$next(seed0));
+				} else {
+					var threshhold = (((-range) >>> 0) % range) >>> 0;
+					var accountForBias = function (seed) {
+						accountForBias:
+						while (true) {
+							var x = $elm$random$Random$peel(seed);
+							var seedN = $elm$random$Random$next(seed);
+							if (_Utils_cmp(x, threshhold) < 0) {
+								var $temp$seed = seedN;
+								seed = $temp$seed;
+								continue accountForBias;
+							} else {
+								return _Utils_Tuple2((x % range) + lo, seedN);
+							}
+						}
+					};
+					return accountForBias(seed0);
+				}
+			});
+	});
+var $elm$random$Random$map = F2(
+	function (func, _v0) {
+		var genA = _v0.a;
+		return $elm$random$Random$Generator(
+			function (seed0) {
+				var _v1 = genA(seed0);
+				var a = _v1.a;
+				var seed1 = _v1.b;
+				return _Utils_Tuple2(
+					func(a),
+					seed1);
+			});
+	});
 var $elm$random$Random$map2 = F3(
 	function (func, _v0, _v1) {
 		var genA = _v0.a;
@@ -6622,6 +6334,27 @@ var $elm$random$Random$pair = F2(
 				}),
 			genA,
 			genB);
+	});
+var $elm$core$List$drop = F2(
+	function (n, list) {
+		drop:
+		while (true) {
+			if (n <= 0) {
+				return list;
+			} else {
+				if (!list.b) {
+					return list;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs;
+					n = $temp$n;
+					list = $temp$list;
+					continue drop;
+				}
+			}
+		}
 	});
 var $elm$core$List$takeReverse = F3(
 	function (n, list, kept) {
@@ -6797,6 +6530,157 @@ var $author$project$Mctrot$config = function (startTime) {
 			{alpha: 0.99995, initial: 400})
 	};
 };
+var $author$project$Mctrot$defaultMinutesPerMile = 24;
+var $elm$core$String$fromFloat = _String_fromNumber;
+var $author$project$SimulatedAnnealing$State = function (a) {
+	return {$: 'State', a: a};
+};
+var $author$project$SimulatedAnnealing$init = F3(
+	function (config, seed, initial) {
+		var e = config.energy(initial);
+		return $author$project$SimulatedAnnealing$State(
+			{best: initial, bestEnergy: e, current: initial, currentEnergy: e, iteration: 0, seed: seed});
+	});
+var $elm$random$Random$initialSeed = function (x) {
+	var _v0 = $elm$random$Random$next(
+		A2($elm$random$Random$Seed, 0, 1013904223));
+	var state1 = _v0.a;
+	var incr = _v0.b;
+	var state2 = (state1 + x) >>> 0;
+	return $elm$random$Random$next(
+		A2($elm$random$Random$Seed, state2, incr));
+};
+var $elm$core$Array$length = function (_v0) {
+	var len = _v0.a;
+	return len;
+};
+var $elm$core$Basics$neq = _Utils_notEqual;
+var $author$project$Mctrot$initialTour = A2(
+	$elm$core$List$filter,
+	function (i) {
+		return !_Utils_eq(i, $author$project$Mctrot$endIndex);
+	},
+	A2(
+		$elm$core$List$range,
+		0,
+		$elm$core$Array$length($author$project$Mctrot$cities) - 1));
+var $author$project$Mctrot$metersPerMile = 1609.344;
+var $author$project$Mctrot$metersPerMinuteFromPace = function (minutesPerMile) {
+	return $author$project$Mctrot$metersPerMile / minutesPerMile;
+};
+var $author$project$Mctrot$parseDate = function (isoDate) {
+	var _v0 = A2(
+		$elm$core$List$map,
+		$elm$core$String$toInt,
+		A2($elm$core$String$split, '-', isoDate));
+	if ((((((_v0.b && (_v0.a.$ === 'Just')) && _v0.b.b) && (_v0.b.a.$ === 'Just')) && _v0.b.b.b) && (_v0.b.b.a.$ === 'Just')) && (!_v0.b.b.b.b)) {
+		var year = _v0.a.a;
+		var _v1 = _v0.b;
+		var month = _v1.a.a;
+		var _v2 = _v1.b;
+		var day = _v2.a.a;
+		return $elm$core$Maybe$Just(
+			_Utils_Tuple3(year, month, day));
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm_community$list_extra$List$Extra$getAt = F2(
+	function (idx, xs) {
+		return (idx < 0) ? $elm$core$Maybe$Nothing : $elm$core$List$head(
+			A2($elm$core$List$drop, idx, xs));
+	});
+var $author$project$Mctrot$sakamotoWeekday = F3(
+	function (year, month, day) {
+		var y = (month < 3) ? (year - 1) : year;
+		var offsets = _List_fromArray(
+			[0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4]);
+		var offset = A2(
+			$elm$core$Maybe$withDefault,
+			0,
+			A2($elm_community$list_extra$List$Extra$getAt, month - 1, offsets));
+		return A2($elm$core$Basics$modBy, 7, ((((y + ((y / 4) | 0)) - ((y / 100) | 0)) + ((y / 400) | 0)) + offset) + day);
+	});
+var $author$project$Mctrot$mondayIndexedWeekday = function (isoDate) {
+	return A2(
+		$elm$core$Maybe$withDefault,
+		0,
+		A2(
+			$elm$core$Maybe$map,
+			function (_v0) {
+				var year = _v0.a;
+				var month = _v0.b;
+				var day = _v0.c;
+				return A2(
+					$elm$core$Basics$modBy,
+					7,
+					A3($author$project$Mctrot$sakamotoWeekday, year, month, day) + 6);
+			},
+			$author$project$Mctrot$parseDate(isoDate)));
+};
+var $elm$core$Platform$Cmd$batch = _Platform_batch;
+var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $elm$core$String$toFloat = _String_toFloat;
+var $author$project$Mctrot$parseMinutesPerMile = function (raw) {
+	var _v0 = $elm$core$String$toFloat(raw);
+	if (_v0.$ === 'Just') {
+		var minutesPerMile = _v0.a;
+		return (minutesPerMile > 0) ? minutesPerMile : $author$project$Mctrot$defaultMinutesPerMile;
+	} else {
+		return $author$project$Mctrot$defaultMinutesPerMile;
+	}
+};
+var $author$project$Mctrot$parseSeed = function (raw) {
+	return A2(
+		$elm$core$Maybe$withDefault,
+		0,
+		$elm$core$String$toInt(raw));
+};
+var $author$project$Mctrot$parseStartMinutes = function (timeOfDay) {
+	var _v0 = A2(
+		$elm$core$List$map,
+		$elm$core$String$toInt,
+		A2($elm$core$String$split, ':', timeOfDay));
+	if ((((_v0.b && (_v0.a.$ === 'Just')) && _v0.b.b) && (_v0.b.a.$ === 'Just')) && (!_v0.b.b.b)) {
+		var hh = _v0.a.a;
+		var _v1 = _v0.b;
+		var mm = _v1.a.a;
+		return (hh * 60) + mm;
+	} else {
+		return 6 * 60;
+	}
+};
+var $author$project$Mctrot$init = function (_v0) {
+	var startTimeOfDay = '06:00';
+	var startDate = '2025-01-06';
+	var speedInput = $elm$core$String$fromFloat($author$project$Mctrot$defaultMinutesPerMile);
+	var seedInput = '1';
+	var activeStart = {
+		metersPerMinute: $author$project$Mctrot$metersPerMinuteFromPace(
+			$author$project$Mctrot$parseMinutesPerMile(speedInput)),
+		minutes: $author$project$Mctrot$parseStartMinutes(startTimeOfDay),
+		weekday: $author$project$Mctrot$mondayIndexedWeekday(startDate)
+	};
+	return _Utils_Tuple2(
+		{
+			activeStart: activeStart,
+			mapVisible: true,
+			running: true,
+			saState: A3(
+				$author$project$SimulatedAnnealing$init,
+				$author$project$Mctrot$config(activeStart),
+				$elm$random$Random$initialSeed(
+					$author$project$Mctrot$parseSeed(seedInput)),
+				$author$project$Mctrot$initialTour),
+			seedInput: seedInput,
+			speedInput: speedInput,
+			startDate: startDate,
+			startTimeOfDay: startTimeOfDay,
+			stepsPerFrame: 1000
+		},
+		$elm$core$Platform$Cmd$none);
+};
+var $author$project$Mctrot$Tick = {$: 'Tick'};
 var $author$project$SimulatedAnnealing$isDone = F2(
 	function (config, _v0) {
 		var s = _v0.a;
@@ -6868,6 +6752,10 @@ var $elm$browser$Browser$AnimationManager$onEffects = F3(
 			}
 		}
 	});
+var $elm$time$Time$Posix = function (a) {
+	return {$: 'Posix', a: a};
+};
+var $elm$time$Time$millisToPosix = $elm$time$Time$Posix;
 var $elm$browser$Browser$AnimationManager$onSelfMsg = F3(
 	function (router, newTime, _v0) {
 		var oldTime = _v0.oldTime;
@@ -6933,45 +6821,34 @@ var $elm$browser$Browser$AnimationManager$onAnimationFrame = function (tagger) {
 };
 var $elm$browser$Browser$Events$onAnimationFrame = $elm$browser$Browser$AnimationManager$onAnimationFrame;
 var $author$project$Mctrot$subscriptions = function (model) {
-	var _v0 = model.saState;
-	if (_v0.$ === 'Just') {
-		var state = _v0.a;
-		return (model.running && (!A2(
-			$author$project$SimulatedAnnealing$isDone,
-			$author$project$Mctrot$config(model.activeStart),
-			state))) ? $elm$browser$Browser$Events$onAnimationFrame(
-			function (_v1) {
-				return $author$project$Mctrot$Tick;
-			}) : $elm$core$Platform$Sub$none;
-	} else {
-		return $elm$core$Platform$Sub$none;
-	}
+	return (model.running && (!A2(
+		$author$project$SimulatedAnnealing$isDone,
+		$author$project$Mctrot$config(model.activeStart),
+		model.saState))) ? $elm$browser$Browser$Events$onAnimationFrame(
+		function (_v0) {
+			return $author$project$Mctrot$Tick;
+		}) : $elm$core$Platform$Sub$none;
 };
-var $author$project$SimulatedAnnealing$State = function (a) {
-	return {$: 'State', a: a};
+var $author$project$Mctrot$startSearch = function (model) {
+	var activeStart = {
+		metersPerMinute: $author$project$Mctrot$metersPerMinuteFromPace(
+			$author$project$Mctrot$parseMinutesPerMile(model.speedInput)),
+		minutes: $author$project$Mctrot$parseStartMinutes(model.startTimeOfDay),
+		weekday: $author$project$Mctrot$mondayIndexedWeekday(model.startDate)
+	};
+	return _Utils_update(
+		model,
+		{
+			activeStart: activeStart,
+			running: true,
+			saState: A3(
+				$author$project$SimulatedAnnealing$init,
+				$author$project$Mctrot$config(activeStart),
+				$elm$random$Random$initialSeed(
+					$author$project$Mctrot$parseSeed(model.seedInput)),
+				$author$project$Mctrot$initialTour)
+		});
 };
-var $author$project$SimulatedAnnealing$init = F3(
-	function (config, seed, initial) {
-		var e = config.energy(initial);
-		return $author$project$SimulatedAnnealing$State(
-			{best: initial, bestEnergy: e, current: initial, currentEnergy: e, iteration: 0, seed: seed});
-	});
-var $elm$core$Array$length = function (_v0) {
-	var len = _v0.a;
-	return len;
-};
-var $elm$core$Basics$neq = _Utils_notEqual;
-var $author$project$Mctrot$initialTour = A2(
-	$elm$core$List$filter,
-	function (i) {
-		return !_Utils_eq(i, $author$project$Mctrot$endIndex);
-	},
-	A2(
-		$elm$core$List$range,
-		0,
-		$elm$core$Array$length($author$project$Mctrot$cities) - 1));
-var $elm$core$Platform$Cmd$batch = _Platform_batch;
-var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$SimulatedAnnealing$eulersNumber = 2.718281828459045;
 var $elm$core$Basics$abs = function (n) {
 	return (n < 0) ? (-n) : n;
@@ -6992,6 +6869,11 @@ var $elm$random$Random$float = F2(
 					scaled,
 					$elm$random$Random$next(seed1));
 			});
+	});
+var $elm$random$Random$step = F2(
+	function (_v0, seed) {
+		var generator = _v0.a;
+		return generator(seed);
 	});
 var $author$project$SimulatedAnnealing$step = F2(
 	function (config, _v0) {
@@ -7043,52 +6925,17 @@ var $author$project$SimulatedAnnealing$stepN = F3(
 var $author$project$Mctrot$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
-			case 'GotSeed':
-				var seed = msg.a;
-				var activeStart = {
-					metersPerMinute: $author$project$Mctrot$metersPerMinuteFromPace(
-						$author$project$Mctrot$parseMinutesPerMile(model.speedInput)),
-					minutes: $author$project$Mctrot$parseStartMinutes(model.startTimeOfDay),
-					weekday: $author$project$Mctrot$mondayIndexedWeekday(model.startDate)
-				};
+			case 'Tick':
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{
-							activeStart: activeStart,
-							running: false,
-							saState: $elm$core$Maybe$Just(
-								A3(
-									$author$project$SimulatedAnnealing$init,
-									$author$project$Mctrot$config(activeStart),
-									seed,
-									$author$project$Mctrot$initialTour))
+							saState: A3(
+								$author$project$SimulatedAnnealing$stepN,
+								$author$project$Mctrot$config(model.activeStart),
+								model.stepsPerFrame,
+								model.saState)
 						}),
-					$elm$core$Platform$Cmd$none);
-			case 'Tick':
-				var _v1 = model.saState;
-				if (_v1.$ === 'Nothing') {
-					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-				} else {
-					var state = _v1.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								saState: $elm$core$Maybe$Just(
-									A3(
-										$author$project$SimulatedAnnealing$stepN,
-										$author$project$Mctrot$config(model.activeStart),
-										model.stepsPerFrame,
-										state))
-							}),
-						$elm$core$Platform$Cmd$none);
-				}
-			case 'Start':
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{running: true, started: true}),
 					$elm$core$Platform$Cmd$none);
 			case 'ToggleRunning':
 				return _Utils_Tuple2(
@@ -7098,10 +6945,8 @@ var $author$project$Mctrot$update = F2(
 					$elm$core$Platform$Cmd$none);
 			case 'Restart':
 				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{running: false, saState: $elm$core$Maybe$Nothing, started: false}),
-					A2($elm$random$Random$generate, $author$project$Mctrot$GotSeed, $elm$random$Random$independentSeed));
+					$author$project$Mctrot$startSearch(model),
+					$elm$core$Platform$Cmd$none);
 			case 'SetStartDate':
 				var date = msg.a;
 				return _Utils_Tuple2(
@@ -7123,6 +6968,13 @@ var $author$project$Mctrot$update = F2(
 						model,
 						{speedInput: speed}),
 					$elm$core$Platform$Cmd$none);
+			case 'SetSeedInput':
+				var seed = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{seedInput: seed}),
+					$elm$core$Platform$Cmd$none);
 			default:
 				return _Utils_Tuple2(
 					_Utils_update(
@@ -7132,7 +6984,6 @@ var $author$project$Mctrot$update = F2(
 		}
 	});
 var $author$project$Mctrot$Restart = {$: 'Restart'};
-var $author$project$Mctrot$Start = {$: 'Start'};
 var $author$project$Mctrot$ToggleMapVisible = {$: 'ToggleMapVisible'};
 var $author$project$Mctrot$ToggleRunning = {$: 'ToggleRunning'};
 var $author$project$SimulatedAnnealing$best = function (_v0) {
@@ -10625,6 +10476,9 @@ var $author$project$Mctrot$viewRow = F4(
 							]))
 					])));
 	});
+var $author$project$Mctrot$SetSeedInput = function (a) {
+	return {$: 'SetSeedInput', a: a};
+};
 var $author$project$Mctrot$SetSpeedInput = function (a) {
 	return {$: 'SetSpeedInput', a: a};
 };
@@ -10791,6 +10645,32 @@ var $author$project$Mctrot$viewRunSettings = function (model) {
 						_List_Nil)
 					])),
 				A2(
+				$elm$html$Html$label,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'font-size', '0.75rem'),
+								A2($elm$html$Html$Attributes$style, 'color', '#666')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Seed')
+							])),
+						A2(
+						$elm$html$Html$input,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$type_('text'),
+								$elm$html$Html$Attributes$value(model.seedInput),
+								$elm$html$Html$Events$onInput($author$project$Mctrot$SetSeedInput)
+							]),
+						_List_Nil)
+					])),
+				A2(
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
@@ -10804,7 +10684,7 @@ var $author$project$Mctrot$viewRunSettings = function (model) {
 							var _v0 = $author$project$Mctrot$weekdayName(model.startDate);
 							if (_v0.$ === 'Just') {
 								var day = _v0.a;
-								return 'Starts ' + (day + (model.started ? ' (changes apply on restart)' : ''));
+								return 'Starts ' + (day + ' (changes apply on restart)');
 							} else {
 								return 'Pick a valid date';
 							}
@@ -10813,216 +10693,201 @@ var $author$project$Mctrot$viewRunSettings = function (model) {
 			]));
 };
 var $author$project$Mctrot$view = function (model) {
-	var _v0 = model.saState;
-	if (_v0.$ === 'Nothing') {
-		return $elm$html$Html$text('Choosing a starting seed...');
-	} else {
-		var state = _v0.a;
-		var tour = $author$project$SimulatedAnnealing$current(state);
-		var viewMax = A2(
-			$elm$core$Basics$max,
-			600,
-			(((A2($author$project$Mctrot$totalMinutes, model.activeStart, tour) / 60) | 0) + 1) * 60);
-		var visits = A2($author$project$Mctrot$simulate, model.activeStart, tour);
-		var done = A2(
-			$author$project$SimulatedAnnealing$isDone,
-			$author$project$Mctrot$config(model.activeStart),
-			state);
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					A2($elm$html$Html$Attributes$style, 'font-family', 'sans-serif'),
-					A2($elm$html$Html$Attributes$style, 'max-width', '1100px')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$h3,
-					_List_Nil,
-					_List_fromArray(
-						[
-							$elm$html$Html$text('Mctrot')
-						])),
-					$author$project$Mctrot$viewRunSettings(model),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							A2($elm$html$Html$Attributes$style, 'margin-top', '0.5rem'),
-							A2($elm$html$Html$Attributes$style, 'display', 'flex'),
-							A2($elm$html$Html$Attributes$style, 'gap', '0.5rem')
-						]),
-					_List_fromArray(
-						[
-							model.started ? A2(
-							$elm$html$Html$button,
-							_List_fromArray(
-								[
-									$elm$html$Html$Events$onClick($author$project$Mctrot$ToggleRunning),
-									$elm$html$Html$Attributes$disabled(done)
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text(
-									done ? 'Done' : (model.running ? 'Pause' : 'Resume'))
-								])) : A2(
-							$elm$html$Html$button,
-							_List_fromArray(
-								[
-									$elm$html$Html$Events$onClick($author$project$Mctrot$Start)
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Start')
-								])),
-							A2(
-							$elm$html$Html$button,
-							_List_fromArray(
-								[
-									$elm$html$Html$Events$onClick($author$project$Mctrot$Restart)
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Restart (new seed)')
-								])),
-							A2(
-							$elm$html$Html$button,
-							_List_fromArray(
-								[
-									$elm$html$Html$Events$onClick($author$project$Mctrot$ToggleMapVisible)
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text(
-									model.mapVisible ? 'Hide map (faster)' : 'Show map')
-								]))
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							A2($elm$html$Html$Attributes$style, 'display', 'flex'),
-							A2($elm$html$Html$Attributes$style, 'gap', '1rem'),
-							A2($elm$html$Html$Attributes$style, 'align-items', 'flex-start')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$div,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$author$project$Mctrot$sectionHeading('Schedule'),
+	var tour = $author$project$SimulatedAnnealing$current(model.saState);
+	var viewMax = A2(
+		$elm$core$Basics$max,
+		600,
+		(((A2($author$project$Mctrot$totalMinutes, model.activeStart, tour) / 60) | 0) + 1) * 60);
+	var visits = A2($author$project$Mctrot$simulate, model.activeStart, tour);
+	var done = A2(
+		$author$project$SimulatedAnnealing$isDone,
+		$author$project$Mctrot$config(model.activeStart),
+		model.saState);
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'font-family', 'sans-serif'),
+				A2($elm$html$Html$Attributes$style, 'max-width', '1100px')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$h3,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Mctrot')
+					])),
+				$author$project$Mctrot$viewRunSettings(model),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'margin-top', '0.5rem'),
+						A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+						A2($elm$html$Html$Attributes$style, 'gap', '0.5rem')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$Mctrot$ToggleRunning),
+								$elm$html$Html$Attributes$disabled(done)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								done ? 'Done' : (model.running ? 'Pause' : 'Resume'))
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$Mctrot$Restart)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Restart')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$Mctrot$ToggleMapVisible)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								model.mapVisible ? 'Hide map (faster)' : 'Show map')
+							]))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+						A2($elm$html$Html$Attributes$style, 'gap', '1rem'),
+						A2($elm$html$Html$Attributes$style, 'align-items', 'flex-start')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$author$project$Mctrot$sectionHeading('Schedule'),
+								A2(
+								$elm$html$Html$p,
+								_List_fromArray(
+									[
+										A2($elm$html$Html$Attributes$style, 'color', '#666'),
+										A2($elm$html$Html$Attributes$style, 'font-size', '0.85rem'),
+										A2($elm$html$Html$Attributes$style, 'margin', '0 0 0.5rem 0')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Pink bands are hours a restaurant is closed. Orange bars are time spent waiting for a restaurant to open.')
+									])),
+								A2(
+								$elm$svg$Svg$svg,
+								_List_fromArray(
+									[
+										$elm$svg$Svg$Attributes$width(
+										$elm$core$String$fromFloat($author$project$Mctrot$timelineWidth)),
+										$elm$svg$Svg$Attributes$height(
+										$elm$core$String$fromFloat(
+											($author$project$Mctrot$rowHeight * $elm$core$List$length(visits)) + 10))
+									]),
+								$elm$core$List$concat(
 									A2(
-									$elm$html$Html$p,
-									_List_fromArray(
-										[
-											A2($elm$html$Html$Attributes$style, 'color', '#666'),
-											A2($elm$html$Html$Attributes$style, 'font-size', '0.85rem'),
-											A2($elm$html$Html$Attributes$style, 'margin', '0 0 0.5rem 0')
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('Pink bands are hours a restaurant is closed. Orange bars are time spent waiting for a restaurant to open.')
-										])),
-									A2(
-									$elm$svg$Svg$svg,
-									_List_fromArray(
-										[
-											$elm$svg$Svg$Attributes$width(
-											$elm$core$String$fromFloat($author$project$Mctrot$timelineWidth)),
-											$elm$svg$Svg$Attributes$height(
-											$elm$core$String$fromFloat(
-												($author$project$Mctrot$rowHeight * $elm$core$List$length(visits)) + 10))
-										]),
-									$elm$core$List$concat(
-										A2(
-											$elm$core$List$indexedMap,
-											A2($author$project$Mctrot$viewRow, model.activeStart, viewMax),
-											visits)))
-								])),
-							model.mapVisible ? A2(
-							$elm$html$Html$div,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$author$project$Mctrot$sectionHeading('Map'),
-									$author$project$Mctrot$viewMap(tour)
-								])) : $elm$html$Html$text('')
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							A2($elm$html$Html$Attributes$style, 'margin-top', '0.5rem'),
-							A2($elm$html$Html$Attributes$style, 'display', 'flex'),
-							A2($elm$html$Html$Attributes$style, 'gap', '1.5rem')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$author$project$Mctrot$readout,
-							'Iteration',
-							$elm$core$String$fromInt(
-								$author$project$SimulatedAnnealing$iteration(state))),
-							A2(
-							$author$project$Mctrot$readout,
-							'Temperature',
-							$elm$core$String$fromInt(
-								$elm$core$Basics$round(
-									A2(
-										$author$project$SimulatedAnnealing$temperature,
-										$author$project$Mctrot$config(model.activeStart),
-										state)))),
-							A2(
-							$author$project$Mctrot$readout,
-							'Current route time',
-							$author$project$Mctrot$formatDuration(
-								$elm$core$Basics$round(
-									$author$project$SimulatedAnnealing$currentEnergy(state)))),
-							A2(
-							$author$project$Mctrot$readout,
-							'Best route time',
-							$author$project$Mctrot$formatDuration(
-								$elm$core$Basics$round(
-									$author$project$SimulatedAnnealing$bestEnergy(state)))),
-							A2(
-							$author$project$Mctrot$readout,
-							'Current distance',
-							$author$project$Mctrot$formatMiles(
-								$author$project$Mctrot$totalDistanceMeters(tour))),
-							A2(
-							$author$project$Mctrot$readout,
-							'Best distance',
-							$author$project$Mctrot$formatMiles(
-								$author$project$Mctrot$totalDistanceMeters(
-									$author$project$SimulatedAnnealing$best(state))))
-						])),
-					$author$project$Mctrot$sectionHeading('Distance matrix'),
-					A2(
-					$elm$html$Html$details,
-					_List_fromArray(
-						[
-							A2($elm$html$Html$Attributes$style, 'margin-top', '0')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$summary,
-							_List_fromArray(
-								[
-									A2($elm$html$Html$Attributes$style, 'cursor', 'pointer'),
-									A2($elm$html$Html$Attributes$style, 'color', '#666')
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Show table (meters)')
-								])),
-							$author$project$Mctrot$viewCostMatrix
-						]))
-				]));
-	}
+										$elm$core$List$indexedMap,
+										A2($author$project$Mctrot$viewRow, model.activeStart, viewMax),
+										visits)))
+							])),
+						model.mapVisible ? A2(
+						$elm$html$Html$div,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$author$project$Mctrot$sectionHeading('Map'),
+								$author$project$Mctrot$viewMap(tour)
+							])) : $elm$html$Html$text('')
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'margin-top', '0.5rem'),
+						A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+						A2($elm$html$Html$Attributes$style, 'gap', '1.5rem')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$author$project$Mctrot$readout,
+						'Iteration',
+						$elm$core$String$fromInt(
+							$author$project$SimulatedAnnealing$iteration(model.saState))),
+						A2(
+						$author$project$Mctrot$readout,
+						'Temperature',
+						$elm$core$String$fromInt(
+							$elm$core$Basics$round(
+								A2(
+									$author$project$SimulatedAnnealing$temperature,
+									$author$project$Mctrot$config(model.activeStart),
+									model.saState)))),
+						A2(
+						$author$project$Mctrot$readout,
+						'Current route time',
+						$author$project$Mctrot$formatDuration(
+							$elm$core$Basics$round(
+								$author$project$SimulatedAnnealing$currentEnergy(model.saState)))),
+						A2(
+						$author$project$Mctrot$readout,
+						'Best route time',
+						$author$project$Mctrot$formatDuration(
+							$elm$core$Basics$round(
+								$author$project$SimulatedAnnealing$bestEnergy(model.saState)))),
+						A2(
+						$author$project$Mctrot$readout,
+						'Current distance',
+						$author$project$Mctrot$formatMiles(
+							$author$project$Mctrot$totalDistanceMeters(tour))),
+						A2(
+						$author$project$Mctrot$readout,
+						'Best distance',
+						$author$project$Mctrot$formatMiles(
+							$author$project$Mctrot$totalDistanceMeters(
+								$author$project$SimulatedAnnealing$best(model.saState))))
+					])),
+				$author$project$Mctrot$sectionHeading('Distance matrix'),
+				A2(
+				$elm$html$Html$details,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'margin-top', '0')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$summary,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'cursor', 'pointer'),
+								A2($elm$html$Html$Attributes$style, 'color', '#666')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Show table (meters)')
+							])),
+						$author$project$Mctrot$viewCostMatrix
+					]))
+			]));
 };
 var $author$project$Mctrot$main = $elm$browser$Browser$element(
 	{init: $author$project$Mctrot$init, subscriptions: $author$project$Mctrot$subscriptions, update: $author$project$Mctrot$update, view: $author$project$Mctrot$view});

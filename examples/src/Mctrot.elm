@@ -10,10 +10,13 @@ module Mctrot exposing (main)
     library's `Config` is just `solution -> Float`, so nothing about the
     core had to change to support that; only this example's own `simulate`
     function got more interesting.
-  - Randomness is used once, up front (via a `Cmd`, see `GotSeed`), to pick
-    the search's starting seed; everything after that is pure stepping. The
-    TSP example instead used a `Cmd` to randomize the *problem* (city
-    positions) and a fixed seed for the search — this one flips that.
+  - The search's starting seed comes from a user-editable text field (see
+    `SetSeedInput`, `parseSeed`), converted to a `Random.Seed` via
+    `Random.initialSeed` — deterministic, so the whole search starts
+    synchronously in `init`/`startSearch`, with no `Cmd`-driven randomness
+    anywhere in this example. The TSP example instead uses a `Cmd` to
+    randomize the *problem* (city positions) with a fixed seed for the
+    search — this one flips that.
 
 47 real McDonald's locations in Manhattan, named by their real nicknames and
 real per-weekday hours (`mcd_locations.csv`), connected by real road
@@ -251,6 +254,14 @@ parseStartMinutes timeOfDay =
 
         _ ->
             6 * 60
+
+
+{-| Parses the value of the seed text input into the `Int` `Random.initialSeed`
+needs. Falls back to 0 if the field is ever empty or non-numeric.
+-}
+parseSeed : String -> Int
+parseSeed raw =
+    String.toInt raw |> Maybe.withDefault 0
 
 
 {-| Sakamoto's algorithm for the day of the week of a Gregorian date:
@@ -503,28 +514,48 @@ initialTour =
 
 
 type alias Model =
-    { saState : Maybe (State Tour)
+    { saState : State Tour
     , running : Bool
-    , started : Bool
     , stepsPerFrame : Int
     , startDate : String
     , startTimeOfDay : String
     , speedInput : String
+    , seedInput : String
     , activeStart : StartTime
     , mapVisible : Bool
     }
 
 
 type Msg
-    = GotSeed Random.Seed
-    | Tick
-    | Start
+    = Tick
     | ToggleRunning
     | Restart
     | SetStartDate String
     | SetStartTimeOfDay String
     | SetSpeedInput String
+    | SetSeedInput String
     | ToggleMapVisible
+
+
+{-| (Re)starts the search from `initialTour`, snapshotting `activeStart` (see
+`viewRunSettings`) and deriving the seed from `seedInput` via
+`Random.initialSeed` — deterministic, so no `Cmd` round trip is needed the
+way a truly random seed would require.
+-}
+startSearch : Model -> Model
+startSearch model =
+    let
+        activeStart =
+            { weekday = mondayIndexedWeekday model.startDate
+            , minutes = parseStartMinutes model.startTimeOfDay
+            , metersPerMinute = metersPerMinuteFromPace (parseMinutesPerMile model.speedInput)
+            }
+    in
+    { model
+        | saState = SimulatedAnnealing.init (config activeStart) (Random.initialSeed (parseSeed model.seedInput)) initialTour
+        , running = True
+        , activeStart = activeStart
+    }
 
 
 init : () -> ( Model, Cmd Msg )
@@ -532,22 +563,33 @@ init _ =
     let
         speedInput =
             String.fromFloat defaultMinutesPerMile
-    in
-    ( { saState = Nothing
-      , running = False
-      , started = False
-      , stepsPerFrame = 1000
-      , startDate = "2025-01-06"
-      , startTimeOfDay = "06:00"
-      , speedInput = speedInput
-      , activeStart =
-            { weekday = mondayIndexedWeekday "2025-01-06"
-            , minutes = parseStartMinutes "06:00"
+
+        seedInput =
+            "1"
+
+        startDate =
+            "2025-01-06"
+
+        startTimeOfDay =
+            "06:00"
+
+        activeStart =
+            { weekday = mondayIndexedWeekday startDate
+            , minutes = parseStartMinutes startTimeOfDay
             , metersPerMinute = metersPerMinuteFromPace (parseMinutesPerMile speedInput)
             }
+    in
+    ( { saState = SimulatedAnnealing.init (config activeStart) (Random.initialSeed (parseSeed seedInput)) initialTour
+      , running = True
+      , stepsPerFrame = 1000
+      , startDate = startDate
+      , startTimeOfDay = startTimeOfDay
+      , speedInput = speedInput
+      , seedInput = seedInput
+      , activeStart = activeStart
       , mapVisible = True
       }
-    , Random.generate GotSeed Random.independentSeed
+    , Cmd.none
     )
 
 
@@ -558,40 +600,16 @@ init _ =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GotSeed seed ->
-            let
-                activeStart =
-                    { weekday = mondayIndexedWeekday model.startDate
-                    , minutes = parseStartMinutes model.startTimeOfDay
-                    , metersPerMinute = metersPerMinuteFromPace (parseMinutesPerMile model.speedInput)
-                    }
-            in
-            ( { model
-                | saState = Just (SimulatedAnnealing.init (config activeStart) seed initialTour)
-                , running = False
-                , activeStart = activeStart
-              }
+        Tick ->
+            ( { model | saState = SimulatedAnnealing.stepN (config model.activeStart) model.stepsPerFrame model.saState }
             , Cmd.none
             )
-
-        Tick ->
-            case model.saState of
-                Nothing ->
-                    ( model, Cmd.none )
-
-                Just state ->
-                    ( { model | saState = Just (SimulatedAnnealing.stepN (config model.activeStart) model.stepsPerFrame state) }
-                    , Cmd.none
-                    )
-
-        Start ->
-            ( { model | running = True, started = True }, Cmd.none )
 
         ToggleRunning ->
             ( { model | running = not model.running }, Cmd.none )
 
         Restart ->
-            ( { model | saState = Nothing, running = False, started = False }, Random.generate GotSeed Random.independentSeed )
+            ( startSearch model, Cmd.none )
 
         SetStartDate date ->
             ( { model | startDate = date }, Cmd.none )
@@ -601,6 +619,9 @@ update msg model =
 
         SetSpeedInput speed ->
             ( { model | speedInput = speed }, Cmd.none )
+
+        SetSeedInput seed ->
+            ( { model | seedInput = seed }, Cmd.none )
 
         ToggleMapVisible ->
             ( { model | mapVisible = not model.mapVisible }, Cmd.none )
@@ -612,16 +633,11 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case model.saState of
-        Just state ->
-            if model.running && not (SimulatedAnnealing.isDone (config model.activeStart) state) then
-                Browser.Events.onAnimationFrame (\_ -> Tick)
+    if model.running && not (SimulatedAnnealing.isDone (config model.activeStart) model.saState) then
+        Browser.Events.onAnimationFrame (\_ -> Tick)
 
-            else
-                Sub.none
-
-        Nothing ->
-            Sub.none
+    else
+        Sub.none
 
 
 
@@ -640,90 +656,81 @@ rowHeight =
 
 view : Model -> Html Msg
 view model =
-    case model.saState of
-        Nothing ->
-            Html.text "Choosing a starting seed..."
+    let
+        tour =
+            SimulatedAnnealing.current model.saState
 
-        Just state ->
-            let
-                tour =
-                    SimulatedAnnealing.current state
+        visits =
+            simulate model.activeStart tour
 
-                visits =
-                    simulate model.activeStart tour
+        done =
+            SimulatedAnnealing.isDone (config model.activeStart) model.saState
 
-                done =
-                    SimulatedAnnealing.isDone (config model.activeStart) state
+        viewMax =
+            max 600 (((totalMinutes model.activeStart tour // 60) + 1) * 60)
+    in
+    Html.div [ Attr.style "font-family" "sans-serif", Attr.style "max-width" "1100px" ]
+        [ Html.h3 [] [ Html.text "Mctrot" ]
+        , viewRunSettings model
+        , Html.div [ Attr.style "margin-top" "0.5rem", Attr.style "display" "flex", Attr.style "gap" "0.5rem" ]
+            [ Html.button [ Events.onClick ToggleRunning, Attr.disabled done ]
+                [ Html.text
+                    (if done then
+                        "Done"
 
-                viewMax =
-                    max 600 (((totalMinutes model.activeStart tour // 60) + 1) * 60)
-            in
-            Html.div [ Attr.style "font-family" "sans-serif", Attr.style "max-width" "1100px" ]
-                [ Html.h3 [] [ Html.text "Mctrot" ]
-                , viewRunSettings model
-                , Html.div [ Attr.style "margin-top" "0.5rem", Attr.style "display" "flex", Attr.style "gap" "0.5rem" ]
-                    [ if model.started then
-                        Html.button [ Events.onClick ToggleRunning, Attr.disabled done ]
-                            [ Html.text
-                                (if done then
-                                    "Done"
+                     else if model.running then
+                        "Pause"
 
-                                 else if model.running then
-                                    "Pause"
-
-                                 else
-                                    "Resume"
-                                )
-                            ]
-
-                      else
-                        Html.button [ Events.onClick Start ] [ Html.text "Start" ]
-                    , Html.button [ Events.onClick Restart ] [ Html.text "Restart (new seed)" ]
-                    , Html.button [ Events.onClick ToggleMapVisible ]
-                        [ Html.text
-                            (if model.mapVisible then
-                                "Hide map (faster)"
-
-                             else
-                                "Show map"
-                            )
-                        ]
-                    ]
-                , Html.div [ Attr.style "display" "flex", Attr.style "gap" "1rem", Attr.style "align-items" "flex-start" ]
-                    [ Html.div []
-                        [ sectionHeading "Schedule"
-                        , Html.p [ Attr.style "color" "#666", Attr.style "font-size" "0.85rem", Attr.style "margin" "0 0 0.5rem 0" ]
-                            [ Html.text "Pink bands are hours a restaurant is closed. Orange bars are time spent waiting for a restaurant to open." ]
-                        , Svg.svg
-                            [ SvgAttr.width (String.fromFloat timelineWidth)
-                            , SvgAttr.height (String.fromFloat (rowHeight * toFloat (List.length visits) + 10))
-                            ]
-                            (List.indexedMap (viewRow model.activeStart viewMax) visits |> List.concat)
-                        ]
-                    , if model.mapVisible then
-                        Html.div []
-                            [ sectionHeading "Map"
-                            , viewMap tour
-                            ]
-
-                      else
-                        Html.text ""
-                    ]
-                , Html.div [ Attr.style "margin-top" "0.5rem", Attr.style "display" "flex", Attr.style "gap" "1.5rem" ]
-                    [ readout "Iteration" (String.fromInt (SimulatedAnnealing.iteration state))
-                    , readout "Temperature" (String.fromInt (round (SimulatedAnnealing.temperature (config model.activeStart) state)))
-                    , readout "Current route time" (formatDuration (round (SimulatedAnnealing.currentEnergy state)))
-                    , readout "Best route time" (formatDuration (round (SimulatedAnnealing.bestEnergy state)))
-                    , readout "Current distance" (formatMiles (totalDistanceMeters tour))
-                    , readout "Best distance" (formatMiles (totalDistanceMeters (SimulatedAnnealing.best state)))
-                    ]
-                , sectionHeading "Distance matrix"
-                , Html.details [ Attr.style "margin-top" "0" ]
-                    [ Html.summary [ Attr.style "cursor" "pointer", Attr.style "color" "#666" ]
-                        [ Html.text "Show table (meters)" ]
-                    , viewCostMatrix
-                    ]
+                     else
+                        "Resume"
+                    )
                 ]
+            , Html.button [ Events.onClick Restart ] [ Html.text "Restart" ]
+            , Html.button [ Events.onClick ToggleMapVisible ]
+                [ Html.text
+                    (if model.mapVisible then
+                        "Hide map (faster)"
+
+                     else
+                        "Show map"
+                    )
+                ]
+            ]
+        , Html.div [ Attr.style "display" "flex", Attr.style "gap" "1rem", Attr.style "align-items" "flex-start" ]
+            [ Html.div []
+                [ sectionHeading "Schedule"
+                , Html.p [ Attr.style "color" "#666", Attr.style "font-size" "0.85rem", Attr.style "margin" "0 0 0.5rem 0" ]
+                    [ Html.text "Pink bands are hours a restaurant is closed. Orange bars are time spent waiting for a restaurant to open." ]
+                , Svg.svg
+                    [ SvgAttr.width (String.fromFloat timelineWidth)
+                    , SvgAttr.height (String.fromFloat (rowHeight * toFloat (List.length visits) + 10))
+                    ]
+                    (List.indexedMap (viewRow model.activeStart viewMax) visits |> List.concat)
+                ]
+            , if model.mapVisible then
+                Html.div []
+                    [ sectionHeading "Map"
+                    , viewMap tour
+                    ]
+
+              else
+                Html.text ""
+            ]
+        , Html.div [ Attr.style "margin-top" "0.5rem", Attr.style "display" "flex", Attr.style "gap" "1.5rem" ]
+            [ readout "Iteration" (String.fromInt (SimulatedAnnealing.iteration model.saState))
+            , readout "Temperature" (String.fromInt (round (SimulatedAnnealing.temperature (config model.activeStart) model.saState)))
+            , readout "Current route time" (formatDuration (round (SimulatedAnnealing.currentEnergy model.saState)))
+            , readout "Best route time" (formatDuration (round (SimulatedAnnealing.bestEnergy model.saState)))
+            , readout "Current distance" (formatMiles (totalDistanceMeters tour))
+            , readout "Best distance" (formatMiles (totalDistanceMeters (SimulatedAnnealing.best model.saState)))
+            ]
+        , sectionHeading "Distance matrix"
+        , Html.details [ Attr.style "margin-top" "0" ]
+            [ Html.summary [ Attr.style "cursor" "pointer", Attr.style "color" "#666" ]
+                [ Html.text "Show table (meters)" ]
+            , viewCostMatrix
+            ]
+        ]
 
 
 mapDisplayWidth : Float
@@ -851,18 +858,20 @@ viewRunSettings model =
                 ]
                 []
             ]
+        , Html.label []
+            [ Html.div [ Attr.style "font-size" "0.75rem", Attr.style "color" "#666" ] [ Html.text "Seed" ]
+            , Html.input
+                [ Attr.type_ "text"
+                , Attr.value model.seedInput
+                , Events.onInput SetSeedInput
+                ]
+                []
+            ]
         , Html.div [ Attr.style "font-size" "0.8rem", Attr.style "color" "#666" ]
             [ Html.text
                 (case weekdayName model.startDate of
                     Just day ->
-                        "Starts "
-                            ++ day
-                            ++ (if model.started then
-                                    " (changes apply on restart)"
-
-                                else
-                                    ""
-                               )
+                        "Starts " ++ day ++ " (changes apply on restart)"
 
                     Nothing ->
                         "Pick a valid date"
